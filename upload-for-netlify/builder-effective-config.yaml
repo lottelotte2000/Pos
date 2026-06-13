@@ -1,0 +1,23 @@
+directories:
+  output: dist_electron
+  buildResources: resources
+appId: com.pos.app
+productName: POS System
+files:
+  - filter:
+      - dist/**/*
+      - electron/**/*
+      - package.json
+win:
+  target: nsis
+mac:
+  target: dmg
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: true
+asar: false
+publish:
+  provider: generic
+  url: https://harmonious-unicorn-e47794.netlify.app/
+electronVersion: 29.4.6

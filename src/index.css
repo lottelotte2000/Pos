@@ -1,0 +1,571 @@
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@100;200;300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  /* --- Theme Variables --- */
+  :root {
+    /* DEFAULT THEME — Clean Dark */
+    --color-bg-base: #0d1117;
+    --color-bg-surface: #161b27;
+    --color-bg-surface2: #1e2535;
+    --color-bg-card: #1a2030;
+    --color-bg-sidebar: #10151f;
+    --color-border: rgba(255,255,255,0.07);
+    --color-text-main: #e2e8f0;
+    --color-text-muted: #64748b;
+    --color-text-sub: #94a3b8;
+
+    /* INDIGO accent (Figma redesign #4F46E5) */
+    --color-primary-50: #eef2ff;
+    --color-primary-100: #e0e7ff;
+    --color-primary-200: #c7d2fe;
+    --color-primary-300: #a5b4fc;
+    --color-primary-400: #818cf8;
+    --color-primary-500: #6366f1;
+    --color-primary-600: #4f46e5;
+    --color-primary-700: #4338ca;
+    --color-primary-800: #3730a3;
+    --color-primary-900: #312e81;
+    --color-primary-950: #1e1b4b;
+
+    --color-secondary-500: #6366f1;
+
+    --bg-image: none;
+  }
+
+  [data-theme="midnight"] {
+    /* MIDNIGHT THEME (Emerald/Black) */
+    --color-bg-base: #000000;
+    /* Pure Black for max contrast */
+    --color-bg-surface: #052e16;
+    /* Dark Green Surface */
+    --color-text-main: #ffffff;
+    --color-text-muted: #a7f3d0;
+
+    --color-primary-50: #ecfdf5;
+    --color-primary-100: #d1fae5;
+    --color-primary-200: #a7f3d0;
+    --color-primary-300: #6ee7b7;
+    --color-primary-400: #34d399;
+    --color-primary-500: #10b981;
+    --color-primary-600: #059669;
+    --color-primary-700: #047857;
+    --color-primary-800: #065f46;
+    --color-primary-900: #064e3b;
+    --color-primary-950: #022c22;
+
+    --color-secondary-500: #14b8a6;
+    /* Teal */
+
+    --bg-image: radial-gradient(circle at center, #022c22 0%, #000000 100%);
+  }
+
+  [data-theme="sunset"] {
+    /* SUNSET THEME (Rose/Warm) */
+    --color-bg-base: #2a0a12;
+    /* Deep Dark Red */
+    --color-bg-surface: #450a0a;
+    /* Dark Red Surface */
+    --color-text-main: #ffffff;
+    --color-text-muted: #fecdd3;
+
+    --color-primary-50: #fff1f2;
+    --color-primary-100: #ffe4e6;
+    --color-primary-200: #fecdd3;
+    --color-primary-300: #fda4af;
+    --color-primary-400: #fb7185;
+    --color-primary-500: #f43f5e;
+    --color-primary-600: #e11d48;
+    --color-primary-700: #be123c;
+    --color-primary-800: #9f1239;
+    --color-primary-900: #881337;
+    --color-primary-950: #4c0519;
+
+    --color-secondary-500: #f97316;
+    /* Orange */
+
+    --bg-image: linear-gradient(to bottom, #4c0519, #000000);
+  }
+
+  [data-theme="light"] {
+    /* LIGHT THEME (Sky/White) */
+    --color-bg-base: #f0f9ff;
+    /* Slate 50 */
+    --color-bg-surface: #ffffff;
+    /* White */
+    --color-text-main: #0c4a6e;
+    /* Dark Blue Text */
+    --color-text-muted: #475569;
+    /* Slate 600 */
+
+    --color-primary-50: #f0f9ff;
+    --color-primary-100: #e0f2fe;
+    --color-primary-200: #bae6fd;
+    --color-primary-300: #7dd3fc;
+    --color-primary-400: #38bdf8;
+    --color-primary-500: #0ea5e9;
+    --color-primary-600: #0284c7;
+    --color-primary-700: #0369a1;
+    --color-primary-800: #075985;
+    --color-primary-900: #0c4a6e;
+    --color-primary-950: #082f49;
+
+    --color-secondary-500: #6366f1;
+    /* Indigo */
+
+    --bg-image: linear-gradient(to bottom right, #e0f2fe, #ffffff);
+  }
+
+  [data-theme="christmas"] {
+    /* CHRISTMAS THEME (Red/Green) */
+    --color-bg-base: #022c22;
+    /* Dark Green */
+    --color-bg-surface: #14532d;
+    /* Green */
+    --color-text-main: #fef2f2;
+    /* Rose 50 */
+    --color-text-muted: #bbf7d0;
+    /* Green 200 */
+
+    --color-primary-50: #fef2f2;
+    --color-primary-100: #fee2e2;
+    --color-primary-200: #fecaca;
+    --color-primary-300: #fca5a5;
+    --color-primary-400: #f87171;
+    --color-primary-500: #ef4444;
+    --color-primary-600: #dc2626;
+    --color-primary-700: #b91c1c;
+    --color-primary-800: #991b1b;
+    --color-primary-900: #7f1d1d;
+    --color-primary-950: #450a0a;
+
+    --color-secondary-500: #eab308;
+    /* Gold */
+
+    --bg-image: radial-gradient(circle at top right, #991b1b 0%, #064e3b 40%, #022c22 100%);
+  }
+
+  [data-theme="newyear"] {
+    /* NEW YEAR THEME (Gold/Black) */
+    --color-bg-base: #000000;
+    /* Black */
+    --color-bg-surface: #18181b;
+    /* Zinc 900 */
+    --color-text-main: #fafafa;
+    /* Zinc 50 */
+    --color-text-muted: #a1a1aa;
+    /* Zinc 400 */
+
+    --color-primary-50: #fffbeb;
+    --color-primary-100: #fef3c7;
+    --color-primary-200: #fde68a;
+    --color-primary-300: #fcd34d;
+    --color-primary-400: #fbbf24;
+    --color-primary-500: #f59e0b;
+    --color-primary-600: #d97706;
+    --color-primary-700: #b45309;
+    --color-primary-800: #92400e;
+    --color-primary-900: #78350f;
+    --color-primary-950: #451a03;
+
+    --color-secondary-500: #e2e8f0;
+    /* Silver */
+
+    --bg-image: radial-gradient(circle at center, #1e1b4b 0%, #000000 100%),
+      radial-gradient(circle at 20% 20%, #f59e0b20 0%, transparent 20%),
+      radial-gradient(circle at 80% 80%, #f59e0b20 0%, transparent 20%);
+  }
+
+  [data-theme="songkran"] {
+    /* SONGKRAN THEME (Cyan/Blue/Pink - Water Festival) */
+    --color-bg-base: #083344;
+    /* Cyan 950 */
+    --color-bg-surface: #155e75;
+    /* Cyan 800 */
+    --color-text-main: #ecfeff;
+    /* Cyan 50 */
+    --color-text-muted: #a5f3fc;
+    /* Cyan 200 */
+
+    --color-primary-50: #ecfeff;
+    --color-primary-100: #cffafe;
+    --color-primary-200: #a5f3fc;
+    --color-primary-300: #67e8f9;
+    --color-primary-400: #22d3ee;
+    --color-primary-500: #06b6d4;
+    --color-primary-600: #0891b2;
+    --color-primary-700: #0e7490;
+    --color-primary-800: #155e75;
+    --color-primary-900: #164e63;
+    --color-primary-950: #083344;
+
+    --color-secondary-500: #f472b6;
+    /* Pink */
+
+    --bg-image: linear-gradient(135deg, #0e7490 0%, #1e3a8a 100%);
+  }
+
+  /* ============================================================
+     LIGHT MODE — overrides neutral surfaces/text/border.
+     Placed AFTER the decorative themes so it wins for surfaces,
+     while the accent (--color-primary-*) still comes from data-theme.
+     ============================================================ */
+  [data-mode="light"] {
+    --color-bg-base: #f5f6f8;
+    --color-bg-surface: #ffffff;
+    --color-bg-surface2: #f1f3f7;
+    --color-bg-card: #ffffff;
+    --color-bg-sidebar: #ffffff;
+    --color-border: #ebedf1;
+    --color-text-main: #15181e;
+    --color-text-muted: #5a6472;
+    --color-text-sub: #475569;
+    --bg-image: none;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: var(--color-bg-base);
+    color: var(--color-text-main);
+    background-image: var(--bg-image);
+    background-attachment: fixed;
+  }
+}
+
+/* ============================================================
+   POS DARK MODE — Utility classes
+   ============================================================ */
+@layer components {
+
+  /* ── Surfaces ── */
+  .pos-bg        { background-color: var(--color-bg-base); }
+  .pos-surface   { background-color: var(--color-bg-surface); }
+  .pos-card      { background-color: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: 1rem; }
+  .pos-border    { border-color: var(--color-border); }
+
+  /* ── Text ── */
+  .pos-text      { color: var(--color-text-main); }
+  .pos-text-sub  { color: var(--color-text-sub); }
+  .pos-text-muted{ color: var(--color-text-muted); }
+
+  /* ── Inputs ── */
+  .pos-input {
+    @apply w-full px-4 py-2.5 rounded-xl text-slate-100 placeholder-slate-500
+           focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all;
+    background-color: var(--color-bg-surface2, #1e2535);
+    border: 1px solid var(--color-border);
+  }
+
+  /* ── Buttons ── */
+  .pos-btn-primary {
+    @apply flex items-center justify-center gap-2 font-semibold rounded-xl
+           bg-blue-600 hover:bg-blue-500 text-white transition-colors px-4 py-2.5;
+  }
+  .pos-btn-success {
+    @apply flex items-center justify-center gap-2 font-semibold rounded-xl
+           bg-emerald-600 hover:bg-emerald-500 text-white transition-colors px-4 py-2.5;
+  }
+  .pos-btn-ghost {
+    @apply flex items-center justify-center gap-2 font-medium rounded-xl
+           text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors px-4 py-2.5;
+    border: 1px solid var(--color-border);
+  }
+  .pos-btn-danger {
+    @apply flex items-center justify-center gap-2 font-medium rounded-xl
+           text-red-400 hover:text-white hover:bg-red-500/20 transition-colors px-3 py-2;
+  }
+}
+
+@layer components {
+
+  /* --- Glassmorphism Cards --- */
+  .card {
+    @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-glass rounded-2xl transition-all duration-300;
+  }
+
+  [data-theme="light"] .card {
+    @apply bg-white/70 border-slate-200 shadow-soft;
+  }
+
+  .card-hover {
+    @apply hover:bg-black/50 hover:shadow-glass-hover hover:-translate-y-1;
+  }
+
+  [data-theme="light"] .card-hover {
+    @apply hover:bg-white/90;
+  }
+
+  .card-header {
+    @apply p-5 border-b border-white/10 flex justify-between items-center;
+  }
+
+  [data-theme="light"] .card-header {
+    @apply border-slate-100;
+  }
+
+  .card-content {
+    @apply p-5;
+  }
+
+  .card-footer {
+    @apply p-4 bg-black/20 border-t border-white/10 rounded-b-2xl;
+  }
+
+  [data-theme="light"] .card-footer {
+    @apply bg-slate-50 border-slate-100;
+  }
+
+  /* --- Modern Buttons --- */
+  /* --- Modern Buttons --- */
+  .btn {
+    @apply px-5 py-2.5 rounded-xl font-medium text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-2 transform active:scale-95 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-br from-primary-600 to-primary-500 text-white hover:from-primary-500 hover:to-primary-400 border border-white/10 shadow-lg hover:shadow-xl hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white border border-white/10 backdrop-blur-md shadow-sm hover:shadow-white/10;
+  }
+
+  [data-theme="light"] .btn-secondary {
+    @apply bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 shadow-sm;
+  }
+
+  .btn-danger {
+    @apply bg-gradient-to-br from-red-600 to-rose-600 text-white hover:from-red-500 hover:to-rose-500 border border-red-500/30 shadow-lg hover:shadow-red-500/50 hover:-translate-y-0.5;
+  }
+
+  .btn-success {
+    @apply bg-gradient-to-br from-emerald-500 to-teal-500 text-white hover:from-emerald-400 hover:to-teal-400 border border-emerald-500/30 shadow-lg hover:shadow-emerald-500/50 hover:-translate-y-0.5;
+  }
+
+  /* --- Form Elements --- */
+  .input-style {
+    @apply block w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 backdrop-blur-sm;
+  }
+
+  [data-theme="light"] .input-style {
+    @apply bg-white border-slate-200 text-slate-800 placeholder-slate-400;
+  }
+
+  label {
+    @apply text-slate-200 font-medium tracking-wide mb-1.5 block;
+  }
+
+  [data-theme="light"] label {
+    @apply text-slate-700;
+  }
+
+  /* --- Navigation --- */
+  .nav-link {
+    @apply flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/10 hover:text-white font-medium transition-all duration-200 mb-1;
+  }
+
+  .nav-link.active {
+    @apply bg-gradient-to-r from-indigo-600/80 to-violet-600/80 text-white shadow-lg backdrop-blur-sm border border-white/10;
+  }
+
+  /* --- Scrollbar --- */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-700/50 rounded-full hover:bg-slate-600/50;
+  }
+
+  /* --- Typography --- */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-white font-semibold;
+  }
+
+  /* --- Festive Animations --- */
+  @keyframes fall {
+    0% {
+      transform: translateY(-10vh) translateX(0);
+    }
+
+    100% {
+      transform: translateY(110vh) translateX(20px);
+    }
+  }
+
+  @keyframes fall-rotate {
+    0% {
+      transform: translateY(-10vh) rotate(0deg);
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateY(110vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes fly-santa {
+    0% {
+      transform: translateX(100vw);
+    }
+
+    100% {
+      transform: translateX(-120vw);
+    }
+  }
+
+  .animate-fall {
+    animation: fall linear infinite;
+  }
+
+  .animate-fall-rotate {
+    animation: fall-rotate linear infinite;
+  }
+
+  .animate-fly-santa {
+    animation: fly-santa 20s linear infinite;
+  }
+
+  @keyframes rain {
+    0% {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+
+    10% {
+      opacity: 0.8;
+    }
+
+    100% {
+      transform: translateY(100vh);
+      opacity: 0;
+    }
+  }
+
+  .animate-rain {
+    animation: rain linear infinite;
+  }
+
+  @keyframes wiggle {
+
+    0%,
+    100% {
+      transform: rotate(-10deg);
+    }
+
+    50% {
+      transform: rotate(10deg);
+    }
+  }
+
+  .animate-wiggle {
+    animation: wiggle 2s ease-in-out infinite;
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes swing {
+    0% {
+      transform: rotate(5deg);
+    }
+
+    100% {
+      transform: rotate(-5deg);
+    }
+  }
+
+  .animate-swing {
+    animation: swing 2s ease-in-out infinite alternate;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce 3s infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+/* ============================================================
+   LIGHT MODE — utility & component overrides
+   Kept OUTSIDE @layer so they reliably win over Tailwind utilities.
+   Note: modal scrims (bg-black/70..90) and colored utilities are left
+   untouched on purpose; .text-white is preserved for colored buttons.
+   ============================================================ */
+[data-mode="light"] body { background-image: none; }
+
+/* Headings → dark ink */
+[data-mode="light"] h1,
+[data-mode="light"] h2,
+[data-mode="light"] h3,
+[data-mode="light"] h4,
+[data-mode="light"] h5,
+[data-mode="light"] h6 { color: #1e293b; }
+
+/* Neutral text */
+[data-mode="light"] .text-slate-100,
+[data-mode="light"] .text-slate-200 { color: #1e293b; }
+[data-mode="light"] .text-slate-300 { color: #334155; }
+[data-mode="light"] .text-slate-400 { color: #475569; }
+[data-mode="light"] .text-slate-500 { color: #64748b; }
+[data-mode="light"] .text-slate-600 { color: #94a3b8; }
+
+/* Neutral surfaces */
+[data-mode="light"] .bg-slate-950,
+[data-mode="light"] .bg-slate-900,
+[data-mode="light"] .bg-slate-800,
+[data-mode="light"] .bg-slate-900\/60,
+[data-mode="light"] .bg-slate-900\/90,
+[data-mode="light"] .bg-slate-900\/95 { background-color: #ffffff; }
+[data-mode="light"] .bg-slate-700 { background-color: #e2e8f0; }
+[data-mode="light"] .bg-black\/20,
+[data-mode="light"] .bg-black\/30,
+[data-mode="light"] .bg-black\/40 { background-color: rgba(15, 23, 42, 0.03); }
+[data-mode="light"] .bg-white\/5,
+[data-mode="light"] .bg-white\/10 { background-color: rgba(15, 23, 42, 0.04); }
+
+/* Borders / dividers */
+[data-mode="light"] .border-white\/5,
+[data-mode="light"] .border-white\/10 { border-color: rgba(15, 23, 42, 0.10); }
+[data-mode="light"] .divide-white\/5 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(15, 23, 42, 0.08); }
+
+/* Components */
+[data-mode="light"] .card { background-color: rgba(255, 255, 255, 0.85); border-color: #e5e9f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); }
+[data-mode="light"] .card-hover:hover { background-color: #ffffff; }
+[data-mode="light"] .card-header { border-color: #eef0f3; }
+[data-mode="light"] .card-footer { background-color: #f8fafc; border-color: #eef0f3; }
+[data-mode="light"] .input-style { background-color: #ffffff; border-color: #e5e9f0; color: #1e293b; }
+[data-mode="light"] .btn-secondary { background-color: #ffffff; color: #334155; border-color: #e5e9f0; }
+[data-mode="light"] label { color: #334155; }
+
+/* Scrollbar */
+[data-mode="light"] ::-webkit-scrollbar-thumb { background-color: rgba(15, 23, 42, 0.18); }
