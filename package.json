@@ -8,12 +8,13 @@
   "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && electron-builder",
+    "build": "vite build && electron-builder --publish never",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "concurrently \"npm:dev\" \"electron .\"",
     "electron:dev": "concurrently \"vite\" \"electron .\"",
-    "electron:build": "vite build && electron-builder",
+    "electron:build": "vite build && electron-builder --publish never",
+    "release": "vite build && electron-builder --publish always",
     "postinstall": "node scripts/rebuild-native.cjs"
   },
   "dependencies": {
@@ -86,8 +87,10 @@
     "asar": false,
     "npmRebuild": false,
     "publish": {
-      "provider": "generic",
-      "url": "https://harmonious-unicorn-e47794.netlify.app/"
+      "provider": "github",
+      "owner": "lottelotte2000",
+      "repo": "Pos",
+      "releaseType": "draft"
     }
   }
 }
