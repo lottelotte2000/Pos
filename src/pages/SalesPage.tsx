@@ -9,6 +9,7 @@ import PaymentModal from '../components/sales/PaymentModal';
 import TopUpModal from '../components/sales/TopUpModal';
 import QuantityModal from '../components/sales/QuantityModal';
 import { Product, CartItem } from '../types';
+import { translateThaiBarcode } from '../utils/thaiBarcode';
 import { Search, ShoppingCart, Trash2, PlusCircle, X, MonitorPlay, MonitorOff, CheckCircle, Clock, Printer, Package, Smartphone } from 'lucide-react';
 
 const SalesPage: React.FC = () => {
@@ -97,7 +98,8 @@ const SalesPage: React.FC = () => {
     const handleBarcodeScanInput = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             event.preventDefault();
-            const scannedBarcode = (event.target as HTMLInputElement).value.trim();
+            // แปลงอักขระไทย → ASCII เผื่อ IME เป็นภาษาไทยตอนสแกน (ทำเฉพาะตอน Enter = สแกน ไม่กระทบการค้นหาชื่อไทย)
+            const scannedBarcode = translateThaiBarcode((event.target as HTMLInputElement).value.trim());
             if (scannedBarcode) {
                 const success = addItemToActiveTab(scannedBarcode, 1);
                 if (!success) {
@@ -175,9 +177,14 @@ const SalesPage: React.FC = () => {
         showNotification(`เพิ่มรายการเติมเงิน ${provider} ${amount} บาท เรียบร้อย`, 'success');
     };
 
+    // โฟกัสช่องสแกนอัตโนมัติ — สลับแท็บ, เปิดบิลใหม่หลังจบการขาย (status กลับเป็น active), และเมื่อปิด modal
+    // เพื่อให้ยิงสินค้าชิ้นถัดไปได้ทันทีโดยไม่ต้องคลิกช่องเอง
     useEffect(() => {
-        barcodeInputRef.current?.focus();
-    }, [activeTabIndex]);
+        if (activeTabData?.status && activeTabData.status !== 'active') return;
+        if (showPaymentModal || showTopUpModal || showQuantityModal) return;
+        const t = setTimeout(() => barcodeInputRef.current?.focus(), 60);
+        return () => clearTimeout(t);
+    }, [activeTabIndex, activeTabData?.status, showPaymentModal, showTopUpModal, showQuantityModal]);
 
     // Handle Global Keyboard Shortcuts
     useEffect(() => {
