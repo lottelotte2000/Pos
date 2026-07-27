@@ -1,7 +1,7 @@
 {
   "name": "vite-react-typescript-starter",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.1",
   "description": "A Modern POS System",
   "author": "Your Name",
   "type": "module",
@@ -84,7 +84,13 @@
       "allowToChangeInstallationDirectory": true,
       "perMachine": true
     },
-    "asar": false,
+    "asar": true,
+    "asarUnpack": [
+      "**/*.node",
+      "**/node_modules/better-sqlite3/**",
+      "**/node_modules/bcrypt/**"
+    ],
+    "compression": "normal",
     "npmRebuild": false,
     "publish": {
       "provider": "github",
