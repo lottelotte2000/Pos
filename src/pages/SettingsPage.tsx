@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { useSettings } from '../context/SettingsContext';
 import { useTheme } from '../context/ThemeContext';
-import { Save, Store, FileText, Folder, Loader2, Info, Smartphone, Palette, Check, Plus, Trash2, Volume2, Play, Square, CheckCircle2, RefreshCw, Package, Sun, Moon } from 'lucide-react';
-import { ReceiptSettings } from '../types';
+import { Save, Store, FileText, Folder, Loader2, Info, Smartphone, Palette, Check, Plus, Trash2, Volume2, Play, Square, CheckCircle2, RefreshCw, Package, Sun, Moon, Upload } from 'lucide-react';
+import { ReceiptSettings, SoundSettings } from '../types';
 
 const SettingsPage: React.FC = () => {
   const { isDataLoaded } = useData();
@@ -67,19 +67,21 @@ const SettingsPage: React.FC = () => {
     setEditingReceiptSettings(prev => ({ ...prev, [id]: value }));
   };
 
-  const handlePlaySound = (soundFile: string) => {
+  const handlePlaySound = (sound: string, tokenId: string) => {
     if (activeSoundPreview) {
       activeSoundPreview.pause();
       activeSoundPreview.currentTime = 0;
     }
 
-    if (playingSound === soundFile) {
+    if (playingSound === tokenId) {
       setPlayingSound(null);
       setActiveSoundPreview(null);
       return;
     }
 
-    const audio = new Audio(`sounds/${soundFile}`);
+    // รองรับทั้งไฟล์เสียงมาตรฐาน และเสียงที่อัปโหลดเอง (dataURL)
+    const src = sound.startsWith('data:') ? sound : `sounds/${sound}`;
+    const audio = new Audio(src);
     audio.volume = 0.5;
     audio.onended = () => {
       setPlayingSound(null);
@@ -87,8 +89,40 @@ const SettingsPage: React.FC = () => {
     };
     audio.play().catch(e => console.error("Error playing sound:", e));
     setActiveSoundPreview(audio);
-    setPlayingSound(soundFile);
+    setPlayingSound(tokenId);
   };
+
+  // อัปโหลดไฟล์เสียงเอง → เก็บเป็น dataURL ใน soundSettings (จำกัด 1MB กัน DB บวม)
+  const handleUploadSound = (key: keyof SoundSettings) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'audio/*';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      if (file.size > 1024 * 1024) {
+        setSaveMessage('❌ ไฟล์เสียงต้องไม่เกิน 1 MB');
+        setTimeout(() => setSaveMessage(null), 3000);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        updateSoundSettings({ [key]: reader.result as string });
+        setSaveMessage('✅ อัปโหลดเสียงเรียบร้อยแล้ว');
+        setTimeout(() => setSaveMessage(null), 3000);
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
+  const soundOptions: { key: keyof SoundSettings; label: string; preset: string; presetName: string }[] = [
+    { key: 'scanSuccessSound', label: 'เสียงเมื่อสแกนเจอสินค้า (Scan Success)', preset: 'empty_barcode.mp3', presetName: 'Beep' },
+    { key: 'paymentSuccessSound', label: 'เสียงเมื่อชำระเงินสำเร็จ (Payment Success)', preset: 'success.mp3', presetName: 'Success' },
+    { key: 'errorSound', label: 'เสียงข้อผิดพลาด (Error / Alert)', preset: 'error.mp3', presetName: 'Error' },
+    { key: 'emptyBarcodeSound', label: 'เสียงบาร์โค้ดว่างเปล่า (Empty Barcode)', preset: 'empty_barcode.mp3', presetName: 'Beep' },
+    { key: 'productNotFoundSound', label: 'เสียงไม่พบสินค้า (Product Not Found)', preset: 'product_not_found.mp3', presetName: 'Not Found' },
+  ];
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
@@ -358,154 +392,48 @@ const SettingsPage: React.FC = () => {
           ตั้งค่าเสียง (Sound Settings)
         </h2>
 
-        <div className="space-y-6">
-          {/* Payment Success Sound */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">เสียงเมื่อชำระเงินสำเร็จ (Payment Success)</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { id: 'success.mp3', name: 'Success', color: 'bg-emerald-500/10 border-emerald-500/30' },
-                { id: 'none', name: 'ปิดเสียง (None)', color: 'bg-slate-500/10 border-slate-500/30' }
-              ].map((sound) => (
-                <div
-                  key={sound.id}
-                  onClick={() => updateSoundSettings({ ...soundSettings, paymentSuccessSound: sound.id === 'none' ? '' : sound.id })}
-                  className={`relative p-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-between group cursor-pointer ${soundSettings?.paymentSuccessSound === (sound.id === 'none' ? '' : sound.id) ? 'bg-primary-500/10 border-primary-500' : 'bg-black/20 border-white/5 hover:bg-white/5'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${soundSettings?.paymentSuccessSound === (sound.id === 'none' ? '' : sound.id) ? 'bg-primary-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
-                      {soundSettings?.paymentSuccessSound === (sound.id === 'none' ? '' : sound.id) ? <CheckCircle2 size={16} /> : <Volume2 size={16} />}
-                    </div>
-                    <span className={`font-medium ${soundSettings?.paymentSuccessSound === (sound.id === 'none' ? '' : sound.id) ? 'text-white' : 'text-slate-400'}`}>{sound.name}</span>
-                  </div>
+        <p className="text-sm text-slate-400 -mt-2">เลือกเสียงเริ่มต้น หรือ <span className="text-primary-300">อัปโหลดเสียงของคุณเอง</span> (ไฟล์ .mp3/.wav ไม่เกิน 1 MB) แล้วกด ▶ เพื่อทดลองฟัง</p>
 
-                  {sound.id !== 'none' && (
+        <div className="space-y-5">
+          {soundOptions.map(({ key, label, preset, presetName }) => {
+            const current = soundSettings?.[key] || '';
+            const isPreset = current === preset;
+            const isCustom = current.startsWith('data:');
+            const isNone = !current;
+            const btn = (active: boolean) =>
+              `flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${active ? 'bg-primary-500/15 border-primary-500 text-primary-300' : 'bg-black/20 border-white/5 text-slate-400 hover:bg-white/5'}`;
+            return (
+              <div key={key} className="p-4 rounded-xl bg-black/20 border border-white/5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Volume2 size={16} className="text-emerald-400" />
+                  <span className="text-sm font-medium text-slate-200">{label}</span>
+                  {isCustom && <span className="text-xs px-2 py-0.5 rounded-md bg-primary-500/15 text-primary-300 border border-primary-500/30">เสียงที่อัปโหลด</span>}
+                </div>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button type="button" onClick={() => updateSoundSettings({ [key]: preset })} className={btn(isPreset)}>
+                    <CheckCircle2 size={15} className={isPreset ? '' : 'opacity-40'} /> เริ่มต้น ({presetName})
+                  </button>
+                  <button type="button" onClick={() => handleUploadSound(key)} className={btn(isCustom)}>
+                    <Upload size={15} /> อัปโหลดเสียงเอง
+                  </button>
+                  <button type="button" onClick={() => updateSoundSettings({ [key]: '' })} className={btn(isNone)}>
+                    <Square size={13} /> ปิดเสียง
+                  </button>
+                  {!isNone && (
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlaySound(sound.id);
-                      }}
-                      className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                      type="button"
+                      onClick={() => handlePlaySound(current, key)}
+                      className="ml-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-sm font-semibold transition-colors"
                       title="ทดลองฟัง"
                     >
-                      {playingSound === sound.id ? <Square size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+                      {playingSound === key ? <Square size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}
+                      ทดลองฟัง
                     </button>
                   )}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Error Sound */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">เสียงข้อผิดพลาด (Error / Alert)</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { id: 'error.mp3', name: 'Error', color: 'bg-red-500/10 border-red-500/30' },
-                { id: 'none', name: 'ปิดเสียง (None)', color: 'bg-slate-500/10 border-slate-500/30' }
-              ].map((sound) => (
-                <div
-                  key={sound.id}
-                  onClick={() => updateSoundSettings({ ...soundSettings, errorSound: sound.id === 'none' ? '' : sound.id })}
-                  className={`relative p-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-between group cursor-pointer ${soundSettings?.errorSound === (sound.id === 'none' ? '' : sound.id) ? 'bg-primary-500/10 border-primary-500' : 'bg-black/20 border-white/5 hover:bg-white/5'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${soundSettings?.errorSound === (sound.id === 'none' ? '' : sound.id) ? 'bg-primary-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
-                      {soundSettings?.errorSound === (sound.id === 'none' ? '' : sound.id) ? <CheckCircle2 size={16} /> : <Volume2 size={16} />}
-                    </div>
-                    <span className={`font-medium ${soundSettings?.errorSound === (sound.id === 'none' ? '' : sound.id) ? 'text-white' : 'text-slate-400'}`}>{sound.name}</span>
-                  </div>
-
-                  {sound.id !== 'none' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlaySound(sound.id);
-                      }}
-                      className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
-                      title="ทดลองฟัง"
-                    >
-                      {playingSound === sound.id ? <Square size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Empty Barcode Sound */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">เสียงบาร์โค้ดว่างเปล่า (Empty Barcode)</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { id: 'empty_barcode.mp3', name: 'Beep', color: 'bg-blue-500/10 border-blue-500/30' },
-                { id: 'none', name: 'ปิดเสียง (None)', color: 'bg-slate-500/10 border-slate-500/30' }
-              ].map((sound) => (
-                <div
-                  key={sound.id}
-                  onClick={() => updateSoundSettings({ ...soundSettings, emptyBarcodeSound: sound.id === 'none' ? '' : sound.id })}
-                  className={`relative p-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-between group cursor-pointer ${soundSettings?.emptyBarcodeSound === (sound.id === 'none' ? '' : sound.id) ? 'bg-primary-500/10 border-primary-500' : 'bg-black/20 border-white/5 hover:bg-white/5'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${soundSettings?.emptyBarcodeSound === (sound.id === 'none' ? '' : sound.id) ? 'bg-primary-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
-                      {soundSettings?.emptyBarcodeSound === (sound.id === 'none' ? '' : sound.id) ? <CheckCircle2 size={16} /> : <Volume2 size={16} />}
-                    </div>
-                    <span className={`font-medium ${soundSettings?.emptyBarcodeSound === (sound.id === 'none' ? '' : sound.id) ? 'text-white' : 'text-slate-400'}`}>{sound.name}</span>
-                  </div>
-
-                  {sound.id !== 'none' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlaySound(sound.id);
-                      }}
-                      className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
-                      title="ทดลองฟัง"
-                    >
-                      {playingSound === sound.id ? <Square size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Product Not Found Sound */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">เสียงไม่พบสินค้า (Product Not Found)</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { id: 'product_not_found.mp3', name: 'Not Found', color: 'bg-amber-500/10 border-amber-500/30' },
-                { id: 'none', name: 'ปิดเสียง (None)', color: 'bg-slate-500/10 border-slate-500/30' }
-              ].map((sound) => (
-                <div
-                  key={sound.id}
-                  onClick={() => updateSoundSettings({ ...soundSettings, productNotFoundSound: sound.id === 'none' ? '' : sound.id })}
-                  className={`relative p-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-between group cursor-pointer ${soundSettings?.productNotFoundSound === (sound.id === 'none' ? '' : sound.id) ? 'bg-primary-500/10 border-primary-500' : 'bg-black/20 border-white/5 hover:bg-white/5'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${soundSettings?.productNotFoundSound === (sound.id === 'none' ? '' : sound.id) ? 'bg-primary-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
-                      {soundSettings?.productNotFoundSound === (sound.id === 'none' ? '' : sound.id) ? <CheckCircle2 size={16} /> : <Volume2 size={16} />}
-                    </div>
-                    <span className={`font-medium ${soundSettings?.productNotFoundSound === (sound.id === 'none' ? '' : sound.id) ? 'text-white' : 'text-slate-400'}`}>{sound.name}</span>
-                  </div>
-
-                  {sound.id !== 'none' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlaySound(sound.id);
-                      }}
-                      className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
-                      title="ทดลองฟัง"
-                    >
-                      {playingSound === sound.id ? <Square size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

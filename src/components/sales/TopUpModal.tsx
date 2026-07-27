@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { X, Smartphone, CheckCircle, Hash } from 'lucide-react';
+import { X, Smartphone, CheckCircle, Hash, Pencil, Plus, Trash2, Check } from 'lucide-react';
+import { TopUpPreset } from '../../types';
 
 interface TopUpModalProps {
-    onConfirm: (provider: string, phoneNumber: string, amount: number) => void;
+    onConfirm: (provider: string, phoneNumber: string, cost: number, profit: number) => void;
     onCancel: () => void;
+    amounts: TopUpPreset[];
+    onSaveAmounts: (list: TopUpPreset[]) => void;
 }
 
 const PROVIDERS = [
@@ -14,22 +17,45 @@ const PROVIDERS = [
     { id: 'PENGUIN', name: 'Penguin', color: 'bg-yellow-500' },
 ];
 
-const AMOUNTS = [20, 50, 100, 200, 300, 500, 1000];
-
-const TopUpModal: React.FC<TopUpModalProps> = ({ onConfirm, onCancel }) => {
+const TopUpModal: React.FC<TopUpModalProps> = ({ onConfirm, onCancel, amounts, onSaveAmounts }) => {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-    const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const [customAmount, setCustomAmount] = useState('');
 
+    // โหมดแก้ไขปุ่มลัด (แก้ได้ในหน้านี้เลย) — เก็บเป็น string ระหว่างพิมพ์
+    const [editing, setEditing] = useState(false);
+    const [editRows, setEditRows] = useState<{ cost: string; profit: string }[]>([]);
+
+    const selected = selectedIndex !== null ? amounts[selectedIndex] : null;
+    const cost = selected ? selected.cost : (parseFloat(customAmount) || 0);
+    const profit = selected ? selected.profit : 0;
+    const total = cost + profit;
+
     const handleConfirm = () => {
-        if (selectedProvider && phoneNumber.length === 10 && (selectedAmount || customAmount)) {
-            const amount = selectedAmount || parseFloat(customAmount);
-            onConfirm(selectedProvider, phoneNumber, amount);
+        if (selectedProvider && cost > 0) {
+            onConfirm(selectedProvider, phoneNumber, cost, profit);
         }
     };
 
-    const isValid = selectedProvider && phoneNumber.length === 10 && (selectedAmount || (customAmount && parseFloat(customAmount) > 0));
+    // เบอร์โทรไม่บังคับ — ต้องเลือกเครือข่าย + มีจำนวนเงินเท่านั้น
+    const isValid = !!selectedProvider && cost > 0;
+
+    const startEditing = () => {
+        setEditRows(amounts.map(a => ({ cost: String(a.cost), profit: String(a.profit || 0) })));
+        setEditing(true);
+    };
+
+    const saveEditing = () => {
+        // ตัดแถวที่ต้นทุน <= 0 หรือว่างออก แล้วเรียงจากน้อยไปมากตามต้นทุน
+        const parsed: TopUpPreset[] = editRows
+            .map(r => ({ cost: parseInt(r.cost, 10), profit: parseInt(r.profit, 10) || 0 }))
+            .filter(r => Number.isFinite(r.cost) && r.cost > 0)
+            .sort((a, b) => a.cost - b.cost);
+        onSaveAmounts(parsed.length ? parsed : [{ cost: 20, profit: 0 }]);
+        setSelectedIndex(null);
+        setEditing(false);
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
@@ -77,7 +103,7 @@ const TopUpModal: React.FC<TopUpModalProps> = ({ onConfirm, onCancel }) => {
 
                     {/* Phone Number Input */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-3">2. กรอกเบอร์โทรศัพท์ (10 หลัก)</label>
+                        <label className="block text-sm font-medium text-slate-400 mb-3">2. เบอร์โทรศัพท์ <span className="text-slate-500">(ไม่บังคับ)</span></label>
                         <div className="relative">
                             <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
                             <input
@@ -95,35 +121,120 @@ const TopUpModal: React.FC<TopUpModalProps> = ({ onConfirm, onCancel }) => {
 
                     {/* Amount Selection */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-3">3. เลือกจำนวนเงิน</label>
-                        <div className="grid grid-cols-4 gap-2 mb-3">
-                            {AMOUNTS.map((amount) => (
+                        <div className="flex items-center justify-between mb-3">
+                            <label className="block text-sm font-medium text-slate-400">3. เลือกจำนวนเงิน</label>
+                            {!editing ? (
                                 <button
-                                    key={amount}
-                                    onClick={() => {
-                                        setSelectedAmount(amount);
-                                        setCustomAmount('');
-                                    }}
-                                    className={`py-2 rounded-lg border text-sm font-semibold transition-all duration-200 ${selectedAmount === amount
-                                        ? 'bg-primary-600 text-white border-primary-500 shadow-lg shadow-primary-500/30'
-                                        : 'bg-white/5 text-slate-300 border-white/5 hover:bg-white/10'
-                                        }`}
+                                    onClick={startEditing}
+                                    className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-primary-300 transition-colors"
                                 >
-                                    {amount}
+                                    <Pencil size={13} /> แก้ไขปุ่ม
                                 </button>
-                            ))}
+                            ) : (
+                                <button
+                                    onClick={saveEditing}
+                                    className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+                                >
+                                    <Check size={14} /> เสร็จ
+                                </button>
+                            )}
                         </div>
-                        <input
-                            type="number"
-                            placeholder="ระบุจำนวนเงินเอง"
-                            value={customAmount}
-                            onChange={(e) => {
-                                setCustomAmount(e.target.value);
-                                setSelectedAmount(null);
-                            }}
-                            className={`w-full bg-black/20 border rounded-xl py-3 px-4 text-center text-lg text-white placeholder-slate-600 focus:outline-none transition-colors ${customAmount ? 'border-primary-500' : 'border-white/10'
-                                }`}
-                        />
+
+                        {!editing ? (
+                            <>
+                                <div className="grid grid-cols-4 gap-2 mb-3">
+                                    {amounts.map((preset, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => {
+                                                setSelectedIndex(i);
+                                                setCustomAmount('');
+                                            }}
+                                            title={preset.profit ? `กำไร ${preset.profit} ฿ (รับ ${preset.cost + preset.profit} ฿)` : undefined}
+                                            className={`py-2 rounded-lg border text-sm font-semibold transition-all duration-200 ${selectedIndex === i
+                                                ? 'bg-primary-600 text-white border-primary-500 shadow-lg shadow-primary-500/30'
+                                                : 'bg-white/5 text-slate-300 border-white/5 hover:bg-white/10'
+                                                }`}
+                                        >
+                                            {preset.cost}
+                                        </button>
+                                    ))}
+                                </div>
+                                <input
+                                    type="number"
+                                    placeholder="ระบุจำนวนเงินเอง (ไม่มีกำไร)"
+                                    value={customAmount}
+                                    onChange={(e) => {
+                                        setCustomAmount(e.target.value);
+                                        setSelectedIndex(null);
+                                    }}
+                                    className={`w-full bg-black/20 border rounded-xl py-3 px-4 text-center text-lg text-white placeholder-slate-600 focus:outline-none transition-colors ${customAmount ? 'border-primary-500' : 'border-white/10'
+                                        }`}
+                                />
+                                {/* สรุปยอดที่ต้องเก็บเมื่อเลือกปุ่มที่มีกำไร */}
+                                {selected && selected.profit > 0 && (
+                                    <div className="mt-3 flex justify-between items-center text-sm rounded-lg bg-black/30 border border-white/10 px-4 py-2.5">
+                                        <span className="text-slate-400">ต้นทุน {selected.cost} + กำไร {selected.profit}</span>
+                                        <span className="font-bold text-primary-400">รับเงิน {total.toLocaleString()} ฿</span>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            /* โหมดแก้ไขปุ่มลัด: ช่องซ้าย = ต้นทุน (โชว์บนปุ่ม), ช่องขวา = กำไร (ไม่โชว์) */
+                            <div className="rounded-xl bg-black/20 border border-primary-500/30 p-3">
+                                <div className="flex items-center gap-2 px-1 mb-2 text-[11px] font-medium text-slate-500">
+                                    <span className="flex-1">ต้นทุน (โชว์บนปุ่ม)</span>
+                                    <span className="flex-1">กำไร (ไม่โชว์)</span>
+                                    <span className="w-7" />
+                                </div>
+                                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                                    {editRows.map((row, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <div className="relative flex-1">
+                                                <input
+                                                    type="number"
+                                                    value={row.cost}
+                                                    autoFocus={i === editRows.length - 1}
+                                                    onChange={(e) => {
+                                                        const next = [...editRows];
+                                                        next[i] = { ...next[i], cost: e.target.value };
+                                                        setEditRows(next);
+                                                    }}
+                                                    placeholder="0"
+                                                    className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-center text-sm font-semibold text-white focus:outline-none focus:border-primary-500 transition-colors"
+                                                />
+                                            </div>
+                                            <div className="relative flex-1">
+                                                <input
+                                                    type="number"
+                                                    value={row.profit}
+                                                    onChange={(e) => {
+                                                        const next = [...editRows];
+                                                        next[i] = { ...next[i], profit: e.target.value };
+                                                        setEditRows(next);
+                                                    }}
+                                                    placeholder="0"
+                                                    className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-center text-sm font-semibold text-emerald-400 focus:outline-none focus:border-primary-500 transition-colors"
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={() => setEditRows(editRows.filter((_, idx) => idx !== i))}
+                                                className="w-7 flex justify-center p-1 text-slate-500 hover:text-red-400 transition-colors"
+                                                title="ลบปุ่มนี้"
+                                            >
+                                                <Trash2 size={15} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => setEditRows([...editRows, { cost: '', profit: '' }])}
+                                    className="mt-2 w-full flex items-center justify-center gap-1 py-2 rounded-lg border border-dashed border-white/20 text-slate-400 hover:text-primary-300 hover:border-primary-500/50 transition-colors text-sm"
+                                >
+                                    <Plus size={14} /> เพิ่มปุ่ม
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -137,13 +248,13 @@ const TopUpModal: React.FC<TopUpModalProps> = ({ onConfirm, onCancel }) => {
                     </button>
                     <button
                         onClick={handleConfirm}
-                        disabled={!isValid}
-                        className={`flex-1 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 ${isValid
+                        disabled={!isValid || editing}
+                        className={`flex-1 py-3 rounded-xl font-bold shadow-lg transition-all duration-300 ${isValid && !editing
                             ? 'bg-gradient-to-r from-primary-600 to-violet-600 text-white hover:shadow-primary-500/30 hover:scale-[1.02]'
                             : 'bg-slate-700 text-slate-500 cursor-not-allowed'
                             }`}
                     >
-                        ยืนยันการเติมเงิน
+                        {isValid ? `ยืนยัน • รับเงิน ${total.toLocaleString()} ฿` : 'ยืนยันการเติมเงิน'}
                     </button>
                 </div>
             </div>

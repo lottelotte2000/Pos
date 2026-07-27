@@ -122,11 +122,20 @@ export interface SoundSettings {
   errorSound: string;
   emptyBarcodeSound: string;
   productNotFoundSound: string;
+  scanSuccessSound: string;
 }
 
 // ✅ การตั้งค่าเกี่ยวกับการขายและสต็อก
+// ปุ่มลัดเติมเงิน 1 ปุ่ม: cost = ยอดเติม/ต้นทุน (แสดงบนปุ่ม), profit = กำไรที่บวกเพิ่ม (ไม่แสดง)
+export interface TopUpPreset {
+  cost: number;
+  profit: number;
+}
+
 export interface PosSettings {
   // เมื่อ true จะไม่อนุญาตให้เพิ่มสินค้าลงตะกร้าหากสต็อกไม่พอ (กันสต็อกติดลบ)
   // ค่าเริ่มต้นเป็น false = ขายได้แม้สต็อกจะติดลบ
   preventNegativeStock: boolean;
+  // รายการปุ่มลัดในหน้าเติมเงิน (แก้ไขได้เอง) — แต่ละปุ่มมีต้นทุน + กำไร
+  topUpAmounts: TopUpPreset[];
 }

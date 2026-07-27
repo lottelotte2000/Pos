@@ -1,7 +1,7 @@
 import { createContext, useState, useContext, ReactNode, useEffect, useRef, useCallback } from 'react';
 import { Transaction, AppData, User } from '../types';
 import { useProducts } from './ProductContext';
-import { useSettings } from './SettingsContext';
+import { useSettings, INITIAL_SOUND_SETTINGS, INITIAL_POS_SETTINGS } from './SettingsContext';
 
 // ... (Interface declarations for electronAPI remain the same) ...
 
@@ -43,12 +43,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             setUsersState(savedData.users || []);
             setReceiptSettings(savedData.receiptSettings);
             setCustomerDisplaySettings(savedData.customerDisplaySettings);
-            if (savedData.soundSettings) {
-              setSoundSettings(savedData.soundSettings);
-            }
-            if (savedData.posSettings) {
-              setPosSettings(savedData.posSettings);
-            }
+            // ✅ merge กับค่า default เสมอ กันกรณี soundSettings ใน DB ไม่ครบฟิลด์ (เสียงจะได้ไม่หาย)
+            setSoundSettings({ ...INITIAL_SOUND_SETTINGS, ...(savedData.soundSettings || {}) });
+            // merge กับ default เสมอ กันกรณี posSettings เก่าไม่มีฟิลด์ใหม่ (เช่น topUpAmounts)
+            const mergedPos = { ...INITIAL_POS_SETTINGS, ...(savedData.posSettings || {}) };
+            // migration: ปุ่มเติมเงินเวอร์ชันเก่าเป็นตัวเลขล้วน → แปลงเป็น { cost, profit }
+            mergedPos.topUpAmounts = (mergedPos.topUpAmounts || []).map((a: unknown) =>
+              typeof a === 'number' ? { cost: a, profit: 0 } : (a as { cost: number; profit: number })
+            );
+            setPosSettings(mergedPos);
           }
         } catch (error) {
           console.error('[DataContext] Error loading data:', error);

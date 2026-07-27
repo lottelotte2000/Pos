@@ -9,14 +9,17 @@ const INITIAL_CUSTOMER_DISPLAY_SETTINGS: CustomerDisplaySettings = {
   thankYouTitle: "ขอบคุณที่ใช้บริการ",
   thankYouSubtitle: "หวังว่าท่านจะกลับมาอีกครั้ง!"
 };
-const INITIAL_SOUND_SETTINGS: SoundSettings = {
+export const INITIAL_SOUND_SETTINGS: SoundSettings = {
   paymentSuccessSound: 'success.mp3',
   errorSound: 'error.mp3',
   emptyBarcodeSound: 'empty_barcode.mp3',
   productNotFoundSound: 'product_not_found.mp3',
+  scanSuccessSound: 'empty_barcode.mp3',
 };
-const INITIAL_POS_SETTINGS: PosSettings = {
+export const INITIAL_POS_SETTINGS: PosSettings = {
   preventNegativeStock: false, // ค่าเริ่มต้น: ขายได้แม้สต็อกจะติดลบ
+  // ปุ่มลัดเติมเงิน (แก้ไขได้) — เริ่มต้นกำไร 0 ให้ผู้ใช้ไปกรอกเอง
+  topUpAmounts: [20, 50, 100, 200, 300, 500, 1000].map(cost => ({ cost, profit: 0 })),
 };
 
 interface SettingsContextType {

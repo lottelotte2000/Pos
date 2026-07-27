@@ -19,7 +19,7 @@ const SalesPage: React.FC = () => {
         setPaymentConfirmation, cancelPaymentConfirmation, completeActiveTabTransaction, resetCompletedTab
     } = useCart();
 
-    const { soundSettings } = useSettings();
+    const { soundSettings, posSettings, updatePosSettings } = useSettings();
 
     const { searchProducts, findProductByBarcode } = useProducts();
 
@@ -47,9 +47,11 @@ const SalesPage: React.FC = () => {
     const handleOpenCustomerDisplay = () => window.electronAPI?.openCustomerDisplay();
     const handleCloseCustomerDisplay = () => window.electronAPI?.closeCustomerDisplay();
 
-    const playSound = useCallback((soundFile: string | undefined) => {
-        if (!soundFile) return;
-        const audio = new Audio(`sounds/${soundFile}`);
+    const playSound = useCallback((sound: string | undefined) => {
+        if (!sound) return;
+        // รองรับทั้งไฟล์เสียงมาตรฐาน (sounds/xxx.mp3) และเสียงที่อัปโหลดเอง (dataURL)
+        const src = sound.startsWith('data:') ? sound : `sounds/${sound}`;
+        const audio = new Audio(src);
         audio.volume = 0.5;
         audio.play().catch(e => console.error("Error playing sound:", e));
     }, []);
@@ -86,6 +88,7 @@ const SalesPage: React.FC = () => {
         const success = addItemToActiveTab(product.barcode, 1);
         if (success) {
             showNotification(`เพิ่ม '${product.name}' ลงตะกร้า`, 'success');
+            playSound(soundSettings?.scanSuccessSound);
         } else {
             showNotification(`ไม่สามารถเพิ่ม '${product.name}' (สต็อกไม่พอ)`, 'error');
             playSound(soundSettings?.errorSound);
@@ -93,33 +96,35 @@ const SalesPage: React.FC = () => {
         setSearchTerm('');
         setSearchResults([]);
         barcodeInputRef.current?.focus();
-    }, [addItemToActiveTab, showNotification, playSound, soundSettings?.errorSound]);
+    }, [addItemToActiveTab, showNotification, playSound, soundSettings?.errorSound, soundSettings?.scanSuccessSound]);
+
+    // ประมวลผลบาร์โค้ดที่ยิงมา (ใช้ร่วมกันทั้งการดักคีย์ทั้งหน้าจอ และการกด Enter ในช่องค้นหา)
+    const processScannedBarcode = useCallback((raw: string) => {
+        const code = translateThaiBarcode(raw.trim()); // แปลงอักษรไทย→ASCII (ถ้าเป็น ASCII อยู่แล้วจะไม่เปลี่ยน)
+        if (!code) { playSound(soundSettings?.emptyBarcodeSound); return; }
+        const success = addItemToActiveTab(code, 1);
+        if (success) {
+            playSound(soundSettings?.scanSuccessSound);
+        } else {
+            const product = findProductByBarcode(code);
+            if (product) {
+                showNotification(`'${product.name}' สต็อกไม่พอ (คงเหลือ ${product.stock})`, 'error');
+                playSound(soundSettings?.errorSound);
+            } else {
+                showNotification(`ไม่พบสินค้าสำหรับบาร์โค้ด '${code}' ในระบบ`, 'error');
+                playSound(soundSettings?.productNotFoundSound);
+            }
+        }
+        setSearchTerm('');
+        barcodeInputRef.current?.focus();
+    }, [addItemToActiveTab, findProductByBarcode, showNotification, playSound, soundSettings?.emptyBarcodeSound, soundSettings?.productNotFoundSound, soundSettings?.errorSound, soundSettings?.scanSuccessSound]);
 
     const handleBarcodeScanInput = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             event.preventDefault();
-            // แปลงอักขระไทย → ASCII เผื่อ IME เป็นภาษาไทยตอนสแกน (ทำเฉพาะตอน Enter = สแกน ไม่กระทบการค้นหาชื่อไทย)
-            const scannedBarcode = translateThaiBarcode((event.target as HTMLInputElement).value.trim());
-            if (scannedBarcode) {
-                const success = addItemToActiveTab(scannedBarcode, 1);
-                if (!success) {
-                    // แยกข้อความ: ไม่พบสินค้า vs สต็อกไม่พอ (เมื่อเปิดการป้องกันสต็อกติดลบ)
-                    const product = findProductByBarcode(scannedBarcode);
-                    if (product) {
-                        showNotification(`'${product.name}' สต็อกไม่พอ (คงเหลือ ${product.stock})`, 'error');
-                        playSound(soundSettings?.errorSound);
-                    } else {
-                        showNotification(`ไม่พบสินค้าสำหรับบาร์โค้ด '${scannedBarcode}' ในระบบ`, 'error');
-                        playSound(soundSettings?.productNotFoundSound);
-                    }
-                }
-            } else {
-                playSound(soundSettings?.emptyBarcodeSound);
-            }
-            (event.target as HTMLInputElement).value = '';
-            setSearchTerm('');
+            processScannedBarcode((event.target as HTMLInputElement).value);
         }
-    }, [addItemToActiveTab, showNotification, playSound, findProductByBarcode, soundSettings?.emptyBarcodeSound, soundSettings?.productNotFoundSound, soundSettings?.errorSound]);
+    }, [processScannedBarcode]);
 
     const handlePaymentConfirm = (cashReceived: number, paymentMethod: string) => {
         setPaymentConfirmation(cashReceived, paymentMethod);
@@ -163,18 +168,20 @@ const SalesPage: React.FC = () => {
         }
     }, [isFinalizing, activeTabIndex, completeActiveTabTransaction, resetCompletedTab, showNotification]);
 
-    const handleTopUpConfirm = (provider: string, phoneNumber: string, amount: number) => {
+    const handleTopUpConfirm = (provider: string, phoneNumber: string, cost: number, profit: number) => {
+        // ลูกค้าจ่าย = ต้นทุน + กำไร ; บันทึก cost = ต้นทุนจริง (รายงานกำไรจะได้ถูกต้อง)
+        const price = cost + profit;
         addCustomItemToActiveTab({
             id: `topup-${Date.now()}`,
-            barcode: `TOPUP-${provider}-${phoneNumber}`,
-            name: `เติมเงิน ${provider} - ${phoneNumber}`,
-            price: amount,
+            barcode: `TOPUP-${provider}-${phoneNumber || 'nophone'}-${Date.now()}`,
+            name: `เติมเงิน ${provider} ${cost}฿${phoneNumber ? ` - ${phoneNumber}` : ''}`,
+            price,
             quantity: 1,
             stock: 9999,
-            cost: 0
+            cost
         });
         setShowTopUpModal(false);
-        showNotification(`เพิ่มรายการเติมเงิน ${provider} ${amount} บาท เรียบร้อย`, 'success');
+        showNotification(`เพิ่มรายการเติมเงิน ${provider} ${cost} บาท (รับเงิน ${price} บาท)`, 'success');
     };
 
     // โฟกัสช่องสแกนอัตโนมัติ — สลับแท็บ, เปิดบิลใหม่หลังจบการขาย (status กลับเป็น active), และเมื่อปิด modal
@@ -185,6 +192,43 @@ const SalesPage: React.FC = () => {
         const t = setTimeout(() => barcodeInputRef.current?.focus(), 60);
         return () => clearTimeout(t);
     }, [activeTabIndex, activeTabData?.status, showPaymentModal, showTopUpModal, showQuantityModal]);
+
+    // ✅ ดักการยิงบาร์โค้ดจากเครื่องสแกนทั้งหน้าจอ โดยใช้ "รหัสปุ่มจริง" (event.code)
+    // ทำให้ยิงได้เหมือนกันไม่ว่า IME จะเป็นไทยหรืออังกฤษ (event.code ไม่ขึ้นกับภาษา) และไม่ต้องโฟกัสช่องก่อน
+    useEffect(() => {
+        let buffer = '';
+        let lastTs = 0;
+        const codeToChar = (code: string): string => {
+            if (/^Digit[0-9]$/.test(code)) return code.charAt(5);
+            if (/^Numpad[0-9]$/.test(code)) return code.charAt(6);
+            if (/^Key[A-Z]$/.test(code)) return code.charAt(3);
+            const sym: Record<string, string> = { Minus: '-', Slash: '/', Period: '.', Backslash: '\\' };
+            return sym[code] || '';
+        };
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (showPaymentModal || showTopUpModal || showQuantityModal) return;
+            if (activeTabData?.status && activeTabData.status !== 'active') return;
+
+            const now = Date.now();
+            if (now - lastTs > 50) buffer = ''; // เว้นช่วงนาน = พิมพ์ด้วยมือ ไม่ใช่สแกนเนอร์ (สแกนเนอร์ยิงเร็ว < 50ms/ตัว)
+            lastTs = now;
+
+            if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+                if (buffer.length >= 4) {
+                    const scanned = buffer;
+                    buffer = '';
+                    e.preventDefault();
+                    e.stopPropagation();
+                    processScannedBarcode(scanned);
+                }
+                return;
+            }
+            const ch = codeToChar(e.code);
+            if (ch) buffer += ch;
+        };
+        window.addEventListener('keydown', onKeyDown, true);
+        return () => window.removeEventListener('keydown', onKeyDown, true);
+    }, [showPaymentModal, showTopUpModal, showQuantityModal, activeTabData?.status, processScannedBarcode]);
 
     // Handle Global Keyboard Shortcuts
     useEffect(() => {
@@ -650,6 +694,8 @@ const SalesPage: React.FC = () => {
                 <TopUpModal
                     onConfirm={handleTopUpConfirm}
                     onCancel={() => setShowTopUpModal(false)}
+                    amounts={posSettings?.topUpAmounts ?? []}
+                    onSaveAmounts={(list) => updatePosSettings({ topUpAmounts: list })}
                 />
             )}
 
