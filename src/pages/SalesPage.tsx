@@ -7,6 +7,7 @@ import { useSalesModals } from '../hooks/useSalesModals';
 import SalesModals from '../components/sales/SalesModals';
 import PaymentModal from '../components/sales/PaymentModal';
 import TopUpModal from '../components/sales/TopUpModal';
+import { DragonBallPowerUp } from '../components/common/DragonBallEffects';
 import QuantityModal from '../components/sales/QuantityModal';
 import { Product, CartItem } from '../types';
 import { translateThaiBarcode } from '../utils/thaiBarcode';
@@ -32,6 +33,7 @@ const SalesPage: React.FC = () => {
     const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const notificationTimerRef = useRef<NodeJS.Timeout | null>(null);
     const barcodeInputRef = useRef<HTMLInputElement>(null);
+    const cartScrollRef = useRef<HTMLDivElement>(null);
     const [isFinalizing, setIsFinalizing] = useState(false);
 
     const modalHandlers = useSalesModals();
@@ -83,6 +85,12 @@ const SalesPage: React.FC = () => {
         }, 300);
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm, searchProducts]);
+
+    // เลื่อนกล่องตะกร้าลงล่างอัตโนมัติเมื่อมีสินค้าเพิ่ม → เห็นสินค้าชิ้นล่าสุดเสมอ
+    useEffect(() => {
+        const el = cartScrollRef.current;
+        if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }, [activeTabData?.items.length]);
 
     const handleAddItemFromSearch = useCallback((product: Product) => {
         const success = addItemToActiveTab(product.barcode, 1);
@@ -361,7 +369,9 @@ const SalesPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-full" style={{ backgroundColor: 'transparent' }}>
+        // ความสูงตายตัว = viewport ลบ header(pt-20=5rem) และ padding ล่าง(pb-6=1.5rem)
+        // เพื่อให้ overflow ภายใน (รายการตะกร้า) ทำงาน และยอดรวม/สุทธิ ล็อกอยู่ล่างเสมอ
+        <div className="flex flex-col h-[calc(100vh-6.5rem)]" style={{ backgroundColor: 'transparent' }}>
             {/* Notification Toast */}
             {notification && (
                 <div className={`fixed top-20 right-5 px-5 py-3 rounded-xl shadow-2xl text-white z-[100] animate-slide-up flex items-center gap-3 text-sm font-medium
@@ -427,10 +437,12 @@ const SalesPage: React.FC = () => {
             </div>
 
             {/* Main Content Grid */}
-            <div className="flex-grow grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden min-h-0">
+            {/* lg:grid-rows-1 = minmax(0,1fr) บังคับให้แถวสูงเท่าพื้นที่จริง ไม่ยืดตามจำนวนสินค้า
+                (กันไม่ให้ส่วนยอดรวม/สุทธิถูกดันหลุดลงล่างเวลาสินค้าเยอะ) */}
+            <div className="flex-grow grid grid-cols-1 lg:grid-cols-12 lg:grid-rows-1 gap-4 overflow-hidden min-h-0">
 
                 {/* Left: Product Search */}
-                <div className="lg:col-span-7 flex flex-col gap-3 overflow-hidden min-h-0 rounded-2xl p-4"
+                <div className="lg:col-span-5 flex flex-col gap-3 overflow-hidden min-h-0 rounded-2xl p-4"
                     style={{ backgroundColor: 'var(--color-bg-surface)', border: '1px solid var(--color-border)' }}>
 
                     {/* Search */}
@@ -478,7 +490,7 @@ const SalesPage: React.FC = () => {
                 </div>
 
                 {/* Right: Cart */}
-                <div className="lg:col-span-5 flex flex-col overflow-hidden min-h-0 rounded-2xl"
+                <div className="lg:col-span-7 flex flex-col overflow-hidden min-h-0 rounded-2xl"
                     style={{ backgroundColor: 'var(--color-bg-surface)', border: '1px solid var(--color-border)' }}>
 
                     {/* Cart Header */}
@@ -500,8 +512,8 @@ const SalesPage: React.FC = () => {
                         </button>
                     </div>
 
-                    {/* Cart Items */}
-                    <div className="flex-grow overflow-y-auto custom-scrollbar">
+                    {/* Cart Items — min-h-0 เพื่อให้ scroll ภายในแทนที่จะดันยอดรวมหลุดลงล่าง */}
+                    <div ref={cartScrollRef} className="flex-grow min-h-0 overflow-y-auto custom-scrollbar">
                         {activeTabData && activeTabData.items.length > 0 ? (
                             <CartItemList
                                 items={activeTabData.items}
@@ -546,7 +558,7 @@ const SalesPage: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setShowPaymentModal(true)}
-                                    className="py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                                    className="db-pay-btn py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
                                 >
                                     <CheckCircle size={16} /> ชำระเงิน
                                 </button>
@@ -605,6 +617,8 @@ const SalesPage: React.FC = () => {
             {/* Payment Completed Overlay — shows for 3 seconds then auto-resets */}
             {activeTabData?.status === 'completed' && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 animate-fade-in">
+                    {/* เอฟเฟกต์พลังธีม Dragon Ball (แสดงเฉพาะธีมนี้) */}
+                    <DragonBallPowerUp />
                     <div className="rounded-2xl p-8 w-full max-w-sm text-center shadow-2xl"
                         style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
                         <div className="mx-auto mb-5 w-20 h-20 flex items-center justify-center bg-emerald-500/20 rounded-full">

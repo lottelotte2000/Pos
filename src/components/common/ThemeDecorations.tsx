@@ -23,7 +23,97 @@ export const ThemeDecorations: React.FC = () => {
     return <NewYearDecorations />;
   }
 
+  if (theme === 'dragonball') {
+    return <DragonBallDecorations />;
+  }
+
   return null;
+};
+
+const DragonBallDecorations = () => {
+  // ลูกแก้วพลังเรืองแสง (energy orbs) — เอฟเฟกต์พลังทั่วไป ลอยเบาๆ
+  const orbs = Array.from({ length: 7 }).map((_, i) => ({
+    id: i,
+    left: `${8 + Math.random() * 84}vw`,
+    top: `${10 + Math.random() * 78}vh`,
+    size: Math.random() * 40 + 36,
+    delay: `${Math.random() * 4}s`,
+    duration: `${Math.random() * 3 + 4}s`,
+    stars: i + 1, // 1–7 ดาว (นัยถึงลูกแก้วทั้ง 7)
+  }));
+
+  // ประกายพลัง (sparkles) กระจายทั่วจอ
+  const sparkles = Array.from({ length: 36 }).map((_, i) => ({
+    id: `spk-${i}`,
+    left: `${Math.random() * 100}vw`,
+    top: `${Math.random() * 100}vh`,
+    size: Math.random() * 12 + 8,
+    delay: `${Math.random() * 3}s`,
+  }));
+
+  // ลูกไฟพลัง (ki comets) พุ่งผ่านจอเป็นระยะ
+  const comets = Array.from({ length: 5 }).map((_, i) => ({
+    id: `cmt-${i}`,
+    top: `${5 + Math.random() * 55}vh`,
+    duration: `${Math.random() * 3 + 5}s`,
+    delay: `${i * 2.4 + Math.random() * 1.5}s`,
+  }));
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[0] overflow-hidden">
+      {/* ลูกไฟพลังพุ่งผ่านจอ */}
+      {comets.map((c) => (
+        <div
+          key={c.id}
+          className="db-comet"
+          style={{ top: c.top, left: 0, animation: `db-comet ${c.duration} linear ${c.delay} infinite` }}
+        />
+      ))}
+      {/* ออร่าพลังกลางจอ */}
+      <div
+        className="absolute rounded-full blur-3xl animate-pulse-slow"
+        style={{ width: 700, height: 700, top: '-20%', left: '50%', transform: 'translateX(-50%)', background: 'radial-gradient(circle, rgba(249,115,22,0.18), transparent 70%)' }}
+      />
+      <div
+        className="absolute rounded-full blur-3xl animate-pulse-slow"
+        style={{ width: 500, height: 500, bottom: '-15%', right: '-8%', background: 'radial-gradient(circle, rgba(250,204,21,0.14), transparent 70%)', animationDelay: '1.2s' }}
+      />
+
+      {/* ลูกแก้วพลังเรืองแสง (ชั้นนอกลอย / ชั้นใน .db-orb เด้ง-กระพริบตอน hover) */}
+      {orbs.map((orb) => (
+        <div
+          key={orb.id}
+          className="absolute animate-float"
+          style={{ left: orb.left, top: orb.top, animationDuration: orb.duration, animationDelay: orb.delay }}
+        >
+          <div
+            className="db-orb rounded-full flex items-center justify-center"
+            style={{
+              width: `${orb.size}px`,
+              height: `${orb.size}px`,
+              background: 'radial-gradient(circle at 35% 30%, #fde68a 0%, #f97316 55%, #c2410c 100%)',
+              boxShadow: '0 0 24px 6px rgba(249,115,22,0.45), inset 0 0 10px rgba(255,255,255,0.35)',
+            }}
+          >
+            <span className="text-red-700 font-black leading-none" style={{ fontSize: `${orb.size * 0.32}px`, textShadow: '0 0 2px rgba(255,255,255,0.6)' }}>
+              {'★'.repeat(Math.min(orb.stars, 3))}
+            </span>
+          </div>
+        </div>
+      ))}
+
+      {/* ประกายพลัง */}
+      {sparkles.map((s) => (
+        <div
+          key={s.id}
+          className="absolute animate-pulse-slow"
+          style={{ left: s.left, top: s.top, fontSize: `${s.size}px`, color: '#fbbf24', opacity: 0.5, animationDelay: s.delay, textShadow: '0 0 8px rgba(251,191,36,0.8)' }}
+        >
+          ✦
+        </div>
+      ))}
+    </div>
+  );
 };
 
 const ChristmasDecorations = () => {

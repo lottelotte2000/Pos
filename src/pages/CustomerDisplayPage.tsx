@@ -3,26 +3,28 @@ import { ShoppingCart, CheckCircle, Gift, Banknote, Smartphone, CreditCard, Wifi
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
 import { useTheme } from '../context/ThemeContext';
+import { DragonBallPowerUp } from '../components/common/DragonBallEffects';
 import { CartItem, CartTab } from '../types';
 
 // ─── Theme palette (รองรับโหมดมืด/สว่าง) ──────────────────────────────────────
 type Pal = ReturnType<typeof getPal>;
 function getPal(mode: 'dark' | 'light') {
   if (mode === 'light') {
+    // จอลูกค้า: พื้นขาว ตัวอักษรดำ คอนทราสต์สูง (ให้ลูกค้าอ่านง่าย ไม่กลืนกัน)
     return {
-      pageBg: '#f5f6f8',
+      pageBg: '#ffffff',
       panel: '#ffffff',
-      panelBorder: '#e5e9f0',
-      row: '#f7f8fa',
-      rowBorder: '#eef0f3',
-      divider: '#ebedf1',
-      ink: '#15181e',
-      sub: '#475569',
-      muted: '#64748b',
-      faint: '#94a3b8',
-      thumbBg: '#f1f3f7',
-      thumbBorder: '#e5e9f0',
-      glowOpacity: 0.06,
+      panelBorder: '#c8d0dc',
+      row: '#eef2f8',
+      rowBorder: '#d3dbe6',
+      divider: '#d3dbe6',
+      ink: '#0a0d12',       // ตัวอักษรหลัก = ดำ
+      sub: '#1a2331',       // รอง = เข้มมาก
+      muted: '#38424f',     // เทาเข้ม (เดิม #64748b กลืน → เข้มขึ้น)
+      faint: '#525d6c',     // เลขลำดับ/หน่วย อ่านออกชัด (เดิม #94a3b8)
+      thumbBg: '#eef2f8',
+      thumbBorder: '#d3dbe6',
+      glowOpacity: 0.03,
     };
   }
   return {
@@ -41,6 +43,7 @@ function getPal(mode: 'dark' | 'light') {
     glowOpacity: 0.1,
   };
 }
+// จอลูกค้าใช้สีตามโหมดมืด/สว่างของแอป (ให้สีเดียวกับหน้าหลัก)
 const usePal = (): Pal => getPal(useTheme().mode);
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -145,8 +148,8 @@ const ActiveCartScreen: React.FC<{ items: CartItem[]; total: number }> = ({ item
           <span>ราคา</span>
         </div>
 
-        {/* Rows */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+        {/* Rows — min-h-0 เพื่อให้ scroll ภายในแทนที่จะดันช่องยอดรวมหลุด */}
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2 custom-scrollbar">
           {items.map((item, idx) => (
             <div
               key={`${item.id}-${idx}`}
@@ -197,20 +200,20 @@ const ActiveCartScreen: React.FC<{ items: CartItem[]; total: number }> = ({ item
           <p className="text-base mt-1" style={{ color: p.faint }}>ชิ้น</p>
         </div>
 
-        {/* Total */}
+        {/* Total — ใช้สีธีมหลัก (var --color-primary) โซลิด ตัวเลขขาว ให้ลูกค้าเห็นชัดที่สุด และสีตรงกับหน้าหลัก */}
         <div
           className="flex-1 rounded-2xl flex flex-col items-center justify-center text-center p-8"
           style={{
-            background: 'linear-gradient(145deg, rgba(59,130,246,0.12) 0%, rgba(99,102,241,0.12) 100%)',
-            border: '1px solid rgba(59,130,246,0.25)',
-            boxShadow: '0 0 40px rgba(59,130,246,0.08)',
+            background: 'var(--color-primary-600)',
+            border: '2px solid var(--color-primary-300)',
+            boxShadow: '0 12px 45px -6px var(--color-primary-500)',
           }}
         >
-          <p className="text-xl font-medium mb-4" style={{ color: p.sub }}>ยอดรวม</p>
-          <p className="font-black leading-none" style={{ color: p.ink, fontSize: '4rem', textShadow: '0 0 30px rgba(59,130,246,0.3)' }}>
+          <p className="text-2xl font-semibold mb-3 text-white" style={{ opacity: 0.92 }}>ยอดรวม</p>
+          <p className="font-black leading-none text-white" style={{ fontSize: '4.75rem', textShadow: '0 3px 24px rgba(0,0,0,0.45)' }}>
             ฿{total.toFixed(2)}
           </p>
-          <div className="w-14 h-1 rounded-full mt-5" style={{ background: 'linear-gradient(to right, #3b82f6, #6366f1)' }} />
+          <div className="w-16 h-1.5 rounded-full mt-5 bg-white/60" />
         </div>
       </div>
     </div>
@@ -262,6 +265,8 @@ const CompletedScreen: React.FC<{ tabData: CartTab }> = ({ tabData }) => {
   const p = usePal();
   return (
     <div className="flex flex-col items-center justify-center h-full text-center p-8 animate-scale-in">
+      {/* เอฟเฟกต์พลังธีม Dragon Ball ตอนชำระเงินเสร็จ (แสดงเฉพาะธีมนี้) */}
+      <DragonBallPowerUp />
 
       {/* Success icon with glow */}
       <div className="relative mb-10">
@@ -393,7 +398,7 @@ const CustomerDisplayPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col overflow-hidden relative select-none"
+      className="h-screen flex flex-col overflow-hidden relative select-none"
       style={{ backgroundColor: p.pageBg, fontFamily: 'inherit' }}
     >
       {/* Background ambient glow */}

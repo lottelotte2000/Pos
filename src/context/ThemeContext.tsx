@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
-export type Theme = 'default' | 'midnight' | 'sunset' | 'light' | 'christmas' | 'newyear' | 'songkran';
+export type Theme = 'default' | 'midnight' | 'sunset' | 'light' | 'christmas' | 'newyear' | 'songkran' | 'dragonball';
 export type FontSize = 'normal' | 'large' | 'extra';
 export type Mode = 'dark' | 'light';
 

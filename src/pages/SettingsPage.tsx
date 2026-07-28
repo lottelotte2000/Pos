@@ -92,24 +92,41 @@ const SettingsPage: React.FC = () => {
     setPlayingSound(tokenId);
   };
 
-  // อัปโหลดไฟล์เสียงเอง → เก็บเป็น dataURL ใน soundSettings (จำกัด 1MB กัน DB บวม)
+  // อัปโหลดไฟล์เสียงเอง → เก็บเป็น dataURL ใน soundSettings
   const handleUploadSound = (key: keyof SoundSettings) => {
+    const flash = (msg: string) => { setSaveMessage(msg); setTimeout(() => setSaveMessage(null), 4000); };
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'audio/*';
     input.onchange = () => {
       const file = input.files?.[0];
       if (!file) return;
-      if (file.size > 1024 * 1024) {
-        setSaveMessage('❌ ไฟล์เสียงต้องไม่เกิน 1 MB');
-        setTimeout(() => setSaveMessage(null), 3000);
+      const MAX = 3 * 1024 * 1024; // 3 MB
+      if (file.size > MAX) {
+        flash(`❌ ไฟล์ใหญ่เกินไป (${(file.size / 1048576).toFixed(1)} MB) — ต้องไม่เกิน 3 MB`);
         return;
       }
       const reader = new FileReader();
+      reader.onerror = () => flash('❌ อ่านไฟล์ไม่สำเร็จ ลองไฟล์อื่น');
       reader.onload = () => {
-        updateSoundSettings({ [key]: reader.result as string });
-        setSaveMessage('✅ อัปโหลดเสียงเรียบร้อยแล้ว');
-        setTimeout(() => setSaveMessage(null), 3000);
+        const dataUrl = reader.result as string;
+        // ✅ ตรวจว่าเล่นได้จริงก่อนบันทึก (กันไฟล์ที่ browser เล่นไม่ได้ → เสียงเงียบทั้งที่ตั้งไว้)
+        const test = new Audio(dataUrl);
+        let settled = false;
+        const finish = (ok: boolean) => {
+          if (settled) return;
+          settled = true;
+          if (ok) {
+            updateSoundSettings({ [key]: dataUrl });
+            flash('✅ อัปโหลดเสียงเรียบร้อยแล้ว');
+          } else {
+            flash('❌ ไฟล์นี้เล่นไม่ได้ (รองรับ .mp3 / .wav) — ลองไฟล์อื่น');
+          }
+        };
+        test.addEventListener('canplaythrough', () => finish(true), { once: true });
+        test.addEventListener('error', () => finish(false), { once: true });
+        // สำรอง: บาง browser ไม่ยิง canplaythrough → เช็ค readyState หลัง 2 วินาที
+        setTimeout(() => finish(test.readyState >= 2), 2000);
       };
       reader.readAsDataURL(file);
     };
@@ -313,11 +330,12 @@ const SettingsPage: React.FC = () => {
               { id: 'light', name: 'Sky Light', color: 'bg-sky-500 ring-2 ring-white/20' },
               { id: 'christmas', name: 'Christmas', color: 'bg-gradient-to-br from-green-700 to-red-600' },
               { id: 'newyear', name: 'New Year', color: 'bg-gradient-to-br from-slate-900 via-yellow-500 to-yellow-200' },
-              { id: 'songkran', name: 'Songkran', color: 'bg-gradient-to-br from-cyan-400 to-pink-400' }
+              { id: 'songkran', name: 'Songkran', color: 'bg-gradient-to-br from-cyan-400 to-pink-400' },
+              { id: 'dragonball', name: 'Dragon Ball', color: 'bg-gradient-to-br from-orange-500 via-amber-400 to-yellow-300 ring-2 ring-orange-400/40' }
             ].map((t) => (
               <button
                 key={t.id}
-                onClick={() => setTheme(t.id as "default" | "midnight" | "sunset" | "light" | "christmas" | "newyear" | "songkran")}
+                onClick={() => setTheme(t.id as "default" | "midnight" | "sunset" | "light" | "christmas" | "newyear" | "songkran" | "dragonball")}
                 className={`relative p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 group ${theme === t.id ? 'border-primary-500 bg-white/5' : 'border-transparent hover:bg-white/5'}`}
               >
                 <div className={`w-12 h-12 rounded-full shadow-lg ${t.color} flex items-center justify-center`}>
@@ -392,7 +410,7 @@ const SettingsPage: React.FC = () => {
           ตั้งค่าเสียง (Sound Settings)
         </h2>
 
-        <p className="text-sm text-slate-400 -mt-2">เลือกเสียงเริ่มต้น หรือ <span className="text-primary-300">อัปโหลดเสียงของคุณเอง</span> (ไฟล์ .mp3/.wav ไม่เกิน 1 MB) แล้วกด ▶ เพื่อทดลองฟัง</p>
+        <p className="text-sm text-slate-400 -mt-2">เลือกเสียงเริ่มต้น หรือ <span className="text-primary-300">อัปโหลดเสียงของคุณเอง</span> (ไฟล์ .mp3/.wav ไม่เกิน 3 MB) แล้วกด ▶ เพื่อทดลองฟัง</p>
 
         <div className="space-y-5">
           {soundOptions.map(({ key, label, preset, presetName }) => {

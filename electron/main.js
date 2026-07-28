@@ -58,7 +58,9 @@ function sendStatusToWindow(text) {
 // ✅ กำหนดโฟลเดอร์เก็บข้อมูลของแอปเอง → %APPDATA%\PosApp
 // เดิม Electron ใช้ชื่อจากฟิลด์ "name" ใน package.json (vite-react-typescript-starter)
 // ต้องตั้งค่าก่อนเรียก app.getPath('userData') ครั้งแรกเสมอ
-app.setPath('userData', path.join(app.getPath('appData'), 'PosApp'));
+// DEV override: ถ้ามี env POS_USERDATA_DIR จะใช้โฟลเดอร์นั้นแทน (ใช้ตอนทดสอบ dev เพื่อไม่แตะข้อมูลจริง)
+//   production ไม่ได้ตั้ง env นี้ จึงใช้ PosApp ตามปกติเสมอ
+app.setPath('userData', process.env.POS_USERDATA_DIR || path.join(app.getPath('appData'), 'PosApp'));
 
 const userDataPath = app.getPath('userData');
 const dataFileName = 'appData.json';

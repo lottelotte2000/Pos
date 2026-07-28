@@ -31,6 +31,7 @@ import { SettingsProvider } from './context/SettingsContext';
 // Import Components
 import UpdateNotification from './components/UpdateNotification';
 import { ThemeDecorations } from './components/common/ThemeDecorations';
+import { WhatsNew } from './components/common/WhatsNew';
 
 const LoadingScreen = ({ message = "Loading..." }) => (
   <div className="flex h-screen w-screen items-center justify-center bg-slate-900 text-white">
@@ -149,6 +150,7 @@ export default function App() {
               <CartProvider>
                 <AppGate />
                 <ThemeDecorations />
+                <WhatsNew />
                 {window.electronAPI && <UpdateNotification />}
               </CartProvider>
             </AuthProvider>

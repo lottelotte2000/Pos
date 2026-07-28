@@ -110,8 +110,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     // ฟังก์ชันเล่นเสียงแจ้งเตือน
     const playSuccessSound = () => {
       try {
-        const soundFile = soundSettings?.paymentSuccessSound || 'success.mp3';
-        const audio = new Audio(`sounds/${soundFile}`);
+        const soundFile = soundSettings?.paymentSuccessSound;
+        if (!soundFile) return; // ผู้ใช้ปิดเสียงไว้
+        // รองรับทั้งไฟล์มาตรฐาน (sounds/xxx.mp3) และเสียงที่อัปโหลดเอง (dataURL)
+        const src = soundFile.startsWith('data:') ? soundFile : `sounds/${soundFile}`;
+        const audio = new Audio(src);
         audio.volume = 0.5; // ลดความดังลงเล็กน้อยไม่ให้แสบหู
         audio.play().catch(err => console.error("Audio play failed:", err));
       } catch (error) {
@@ -122,8 +125,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     // ฟังก์ชันเล่นเสียง Error
     const playErrorSound = () => {
       try {
-        const soundFile = soundSettings?.errorSound || 'error.mp3';
-        const audio = new Audio(`sounds/${soundFile}`);
+        const soundFile = soundSettings?.errorSound;
+        if (!soundFile) return; // ผู้ใช้ปิดเสียงไว้
+        const src = soundFile.startsWith('data:') ? soundFile : `sounds/${soundFile}`;
+        const audio = new Audio(src);
         audio.volume = 0.5;
         audio.play().catch(err => console.error("Audio play failed:", err));
       } catch (error) {

@@ -209,6 +209,43 @@
     --bg-image: linear-gradient(135deg, #0e7490 0%, #1e3a8a 100%);
   }
 
+  [data-theme="dragonball"] {
+    /* DRAGON BALL — Saiyan Energy (Goku-orange / Super-Saiyan gold / Ki-blue on deep space) */
+    --color-bg-base: #0a0a14;
+    /* Deep cosmic */
+    --color-bg-surface: #17131f;
+    --color-bg-surface2: #201a2b;
+    --color-bg-card: #1a1524;
+    --color-bg-sidebar: #0f0b17;
+    --color-border: rgba(255, 170, 60, 0.14);
+    --color-text-main: #fdf3e3;
+    --color-text-muted: #f0b46a;
+    --color-text-sub: #fcd9a8;
+
+    /* Orange gi ramp (primary) */
+    --color-primary-50: #fff7ed;
+    --color-primary-100: #ffedd5;
+    --color-primary-200: #fed7aa;
+    --color-primary-300: #fdba74;
+    --color-primary-400: #fb923c;
+    --color-primary-500: #f97316;
+    --color-primary-600: #ea580c;
+    --color-primary-700: #c2410c;
+    --color-primary-800: #9a3412;
+    --color-primary-900: #7c2d12;
+    --color-primary-950: #431407;
+
+    --color-secondary-500: #facc15;
+    /* Super-Saiyan gold */
+
+    /* Ki-energy aura: orange top, gold bottom-right, ki-blue bottom-left
+       (สีพื้นทึบมาจาก --color-bg-base ผ่าน background-color; ห้ามใส่สีทึบใน background-image) */
+    --bg-image:
+      radial-gradient(circle at 50% -10%, rgba(249, 115, 22, 0.22) 0%, transparent 45%),
+      radial-gradient(circle at 88% 108%, rgba(250, 204, 21, 0.15) 0%, transparent 42%),
+      radial-gradient(circle at 8% 92%, rgba(56, 189, 248, 0.12) 0%, transparent 42%);
+  }
+
   /* ============================================================
      LIGHT MODE — overrides neutral surfaces/text/border.
      Placed AFTER the decorative themes so it wins for surfaces,
@@ -569,3 +606,65 @@
 
 /* Scrollbar */
 [data-mode="light"] ::-webkit-scrollbar-thumb { background-color: rgba(15, 23, 42, 0.18); }
+
+/* ============================================================
+   DRAGON BALL THEME — energy effects (comets + power-up burst)
+   ============================================================ */
+@keyframes db-comet {
+  0%   { transform: translate(-18vw, 6vh) rotate(-16deg); opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { transform: translate(120vw, -20vh) rotate(-16deg); opacity: 0; }
+}
+/* ออร่าพลังตอนชำระเงินเสร็จ — เรืองแสงรอบขอบจอ (ไม่บังตัวเลขกลางจอ) */
+@keyframes db-aura-pulse {
+  0%, 100% { box-shadow: inset 0 0 100px 20px rgba(249, 115, 22, 0.42), inset 0 0 46px 10px rgba(250, 204, 21, 0.30); }
+  50%      { box-shadow: inset 0 0 160px 40px rgba(249, 115, 22, 0.78), inset 0 0 80px 16px rgba(250, 204, 21, 0.55); }
+}
+/* ประกายพลังลอยขึ้น */
+@keyframes db-rise {
+  0%   { transform: translateY(0) scale(1); opacity: 0; }
+  12%  { opacity: 1; }
+  100% { transform: translateY(-78vh) scale(0.25); opacity: 0; }
+}
+.db-comet {
+  position: absolute;
+  height: 5px;
+  width: 190px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent 0%, rgba(251, 191, 36, 0.85) 62%, #ffffff 100%);
+  filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.9));
+  will-change: transform, opacity;
+}
+
+/* ปุ่ม "ชำระเงิน" — ออร่าไฟลุกโชน (เฉพาะธีม dragonball) */
+@keyframes db-blaze {
+  0%, 100% { box-shadow: 0 0 16px 2px rgba(249, 115, 22, 0.55), 0 0 38px 6px rgba(250, 204, 21, 0.30); }
+  50%      { box-shadow: 0 0 26px 5px rgba(249, 115, 22, 0.88), 0 0 58px 12px rgba(250, 204, 21, 0.50); }
+}
+[data-theme="dragonball"] .db-pay-btn {
+  background-image: linear-gradient(135deg, #f97316 0%, #ea580c 55%, #dc2626 100%) !important;
+  border: 1px solid rgba(250, 204, 21, 0.5);
+  animation: db-blaze 1.4s ease-in-out infinite;
+}
+[data-theme="dragonball"] .db-pay-btn:hover { filter: brightness(1.08) saturate(1.1); }
+[data-theme="dragonball"] .db-pay-btn:active {
+  box-shadow: 0 0 46px 12px rgba(249, 115, 22, 1), 0 0 92px 22px rgba(250, 204, 21, 0.7) !important;
+  transform: scale(0.97);
+}
+
+/* ลูกแก้วพลัง — เด้ง/กระพริบตอน hover (เฉพาะธีม dragonball) */
+@keyframes db-orb-bounce {
+  0%, 100% { transform: scale(1.4);  filter: brightness(1.2); }
+  50%      { transform: scale(1.95); filter: brightness(2) saturate(1.3); }
+}
+[data-theme="dragonball"] .db-orb {
+  pointer-events: auto;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+[data-theme="dragonball"] .db-orb:hover {
+  opacity: 1;
+  animation: db-orb-bounce 0.5s ease-in-out infinite;
+}
