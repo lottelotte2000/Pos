@@ -22,6 +22,7 @@ dist_electron.zip
 appData.json
 appData.json.migrated
 *.db
+nul
 poslog_*.txt
 lint_output.txt
 test_output.txt
