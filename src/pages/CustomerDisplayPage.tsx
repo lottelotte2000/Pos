@@ -399,8 +399,12 @@ const CustomerDisplayPage: React.FC = () => {
   return (
     <div
       className="h-screen flex flex-col overflow-hidden relative select-none"
-      style={{ backgroundColor: p.pageBg, fontFamily: 'inherit' }}
+      style={{ fontFamily: 'inherit' }}
     >
+      {/* พื้นหลังทึบของจอลูกค้า — วางเป็นชั้นล่างสุด (ใต้เลเยอร์ตกแต่งธีม -z-10)
+          เพื่อให้เอฟเฟกต์ตกแต่งของธีม (ดอกฮิบานะ/ดาบ/คลื่นน้ำ) โผล่ขึ้นมาเหนือพื้นหลังได้ */}
+      <div className="fixed inset-0 -z-20" style={{ backgroundColor: p.pageBg }} aria-hidden />
+
       {/* Background ambient glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
