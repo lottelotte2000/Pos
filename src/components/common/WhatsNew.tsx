@@ -3,9 +3,14 @@ import { X, Sparkles } from 'lucide-react';
 
 // เวอร์ชันของ "โน้ตอัปเดต" ปัจจุบัน — เปลี่ยนค่านี้ทุกครั้งที่ออกเวอร์ชันใหม่
 // ระบบจะโชว์หน้าต่างนี้ครั้งเดียวหลังอัปเดต (จนกว่าผู้ใช้จะกดปิด)
-const WHATS_NEW_VERSION = '1.2.4';
+const WHATS_NEW_VERSION = '1.2.5';
 
 const CHANGES: { icon: string; title: string; desc: string }[] = [
+  {
+    icon: '🖥️',
+    title: 'แก้จอลูกค้า: ธีมไม่ขึ้น',
+    desc: 'ธีม Demon Slayer และเอฟเฟกต์ตกแต่งอื่นๆ แสดงบนจอลูกค้า (จอเสริม) ได้ถูกต้องแล้ว',
+  },
   {
     icon: '⚔️',
     title: 'ธีมใหม่ “Demon Slayer”',
