@@ -246,6 +246,43 @@
       radial-gradient(circle at 8% 92%, rgba(56, 189, 248, 0.12) 0%, transparent 42%);
   }
 
+  [data-theme="demonslayer"] {
+    /* DEMON SLAYER — Water-breathing teal + wisteria pink on charcoal night
+       (สไตล์ลมหายใจสายน้ำ ไม่ใช้ตัวละคร/ทรัพย์สินลิขสิทธิ์) */
+    --color-bg-base: #0b1220;
+    /* Charcoal navy */
+    --color-bg-surface: #141c2e;
+    --color-bg-surface2: #1b2438;
+    --color-bg-card: #161f31;
+    --color-bg-sidebar: #0c1322;
+    --color-border: rgba(45, 212, 191, 0.16);
+    --color-text-main: #eef7f6;
+    --color-text-muted: #7fd3c8;
+    --color-text-sub: #bfe9e2;
+
+    /* Water-breathing teal/cyan ramp (primary) */
+    --color-primary-50: #ecfeff;
+    --color-primary-100: #cffafe;
+    --color-primary-200: #a5f3fc;
+    --color-primary-300: #67e8f9;
+    --color-primary-400: #22d3ee;
+    --color-primary-500: #14b8a6;
+    --color-primary-600: #0d9488;
+    --color-primary-700: #0f766e;
+    --color-primary-800: #115e59;
+    --color-primary-900: #134e4a;
+    --color-primary-950: #042f2e;
+
+    --color-secondary-500: #ec4899;
+    /* Wisteria pink */
+
+    /* ออร่า: สายน้ำฟ้า-เขียวด้านบน, ชมพูวิสทีเรียมุมล่าง, ม่วงจางอีกมุม */
+    --bg-image:
+      radial-gradient(circle at 50% -10%, rgba(20, 184, 166, 0.20) 0%, transparent 46%),
+      radial-gradient(circle at 90% 106%, rgba(236, 72, 153, 0.16) 0%, transparent 42%),
+      radial-gradient(circle at 6% 96%, rgba(139, 92, 246, 0.12) 0%, transparent 42%);
+  }
+
   /* ============================================================
      LIGHT MODE — overrides neutral surfaces/text/border.
      Placed AFTER the decorative themes so it wins for surfaces,
@@ -667,4 +704,46 @@
 [data-theme="dragonball"] .db-orb:hover {
   opacity: 1;
   animation: db-orb-bounce 0.5s ease-in-out infinite;
+}
+
+/* ============================================================
+   DEMON SLAYER — เอฟเฟกต์ลมหายใจสายน้ำ + กลีบวิสทีเรีย
+   ============================================================ */
+/* กลีบวิสทีเรียร่วงพร้อมส่ายไปมา */
+@keyframes ds-petal-fall {
+  0%   { transform: translateY(-8vh) translateX(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.85; }
+  90%  { opacity: 0.85; }
+  100% { transform: translateY(108vh) translateX(12vw) rotate(320deg); opacity: 0; }
+}
+.ds-petal { position: absolute; will-change: transform, opacity; }
+
+/* ประกายไฟ/หยดน้ำลอยขึ้น */
+@keyframes ds-ember {
+  0%   { transform: translateY(0) scale(1); opacity: 0; }
+  14%  { opacity: 1; }
+  100% { transform: translateY(-72vh) scale(0.3); opacity: 0; }
+}
+
+/* คลื่นสายน้ำไหลวนเบาๆ */
+@keyframes ds-wave-drift {
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); opacity: 0.5; }
+  50%      { transform: translateX(3vw) translateY(-2vh) rotate(4deg); opacity: 0.8; }
+}
+.ds-wave { position: absolute; will-change: transform, opacity; filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.5)); }
+
+/* ปุ่ม "ชำระเงิน" — ออร่าสายน้ำเรืองแสง (เฉพาะธีม demonslayer) */
+@keyframes ds-water-glow {
+  0%, 100% { box-shadow: 0 0 16px 2px rgba(20, 184, 166, 0.5), 0 0 38px 6px rgba(34, 211, 238, 0.28); }
+  50%      { box-shadow: 0 0 26px 5px rgba(20, 184, 166, 0.85), 0 0 58px 12px rgba(236, 72, 153, 0.35); }
+}
+[data-theme="demonslayer"] .db-pay-btn {
+  background-image: linear-gradient(135deg, #14b8a6 0%, #0891b2 55%, #db2777 100%) !important;
+  border: 1px solid rgba(34, 211, 238, 0.5);
+  animation: ds-water-glow 1.6s ease-in-out infinite;
+}
+[data-theme="demonslayer"] .db-pay-btn:hover { filter: brightness(1.08) saturate(1.1); }
+[data-theme="demonslayer"] .db-pay-btn:active {
+  box-shadow: 0 0 46px 12px rgba(20, 184, 166, 1), 0 0 92px 22px rgba(34, 211, 238, 0.7) !important;
+  transform: scale(0.97);
 }

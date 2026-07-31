@@ -331,11 +331,12 @@ const SettingsPage: React.FC = () => {
               { id: 'christmas', name: 'Christmas', color: 'bg-gradient-to-br from-green-700 to-red-600' },
               { id: 'newyear', name: 'New Year', color: 'bg-gradient-to-br from-slate-900 via-yellow-500 to-yellow-200' },
               { id: 'songkran', name: 'Songkran', color: 'bg-gradient-to-br from-cyan-400 to-pink-400' },
-              { id: 'dragonball', name: 'Dragon Ball', color: 'bg-gradient-to-br from-orange-500 via-amber-400 to-yellow-300 ring-2 ring-orange-400/40' }
+              { id: 'dragonball', name: 'Dragon Ball', color: 'bg-gradient-to-br from-orange-500 via-amber-400 to-yellow-300 ring-2 ring-orange-400/40' },
+              { id: 'demonslayer', name: 'Demon Slayer', color: 'bg-gradient-to-br from-teal-500 via-cyan-500 to-pink-500 ring-2 ring-teal-400/40' }
             ].map((t) => (
               <button
                 key={t.id}
-                onClick={() => setTheme(t.id as "default" | "midnight" | "sunset" | "light" | "christmas" | "newyear" | "songkran" | "dragonball")}
+                onClick={() => setTheme(t.id as "default" | "midnight" | "sunset" | "light" | "christmas" | "newyear" | "songkran" | "dragonball" | "demonslayer")}
                 className={`relative p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 group ${theme === t.id ? 'border-primary-500 bg-white/5' : 'border-transparent hover:bg-white/5'}`}
               >
                 <div className={`w-12 h-12 rounded-full shadow-lg ${t.color} flex items-center justify-center`}>

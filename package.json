@@ -1,7 +1,7 @@
 {
   "name": "vite-react-typescript-starter",
   "private": true,
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "A Modern POS System",
   "author": "Your Name",
   "type": "module",

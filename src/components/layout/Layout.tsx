@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 
 const Layout = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="min-h-screen z-0 relative" style={{ backgroundColor: 'var(--color-bg-base)' }}>
+    <div className="min-h-screen z-0 relative">
       <Sidebar />
       <div className="ml-64 transition-all duration-300 min-h-screen flex flex-col">
         <Header />
