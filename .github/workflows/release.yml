@@ -1,0 +1,67 @@
+# สร้างตัวติดตั้ง Windows แล้วอัปขึ้น GitHub Releases อัตโนมัติ (ไม่ต้อง build บนเครื่องตัวเอง)
+# วิธีใช้: แท็บ Actions → Release → Run workflow
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'ปล่อยให้ลูกค้าทันที (ไม่ติ๊ก = เก็บเป็น Draft ไว้ตรวจก่อน)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # postinstall จะดึง better-sqlite3 ที่ตรงกับ Electron ให้เอง (scripts/rebuild-native.cjs)
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc -p tsconfig.app.json --noEmit
+
+      - name: Build installer and upload to GitHub Releases (draft)
+        run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # electron-builder ไม่ใส่คำอธิบาย release ให้ → ใส่ชื่อ + release notes จาก docs/release-notes/vX.Y.Z.md
+      - name: Set release title and notes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PUBLISH: ${{ inputs.publish }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          NOTES="docs/release-notes/v${VERSION}.md"
+          ID=$(gh api "repos/${REPO}/releases" --jq ".[] | select(.tag_name==\"v${VERSION}\") | .id" | head -n1)
+          if [ -z "$ID" ]; then
+            echo "::error::ไม่พบ release v${VERSION}"
+            exit 1
+          fi
+          ARGS=(-f name="POS System v${VERSION}" -f target_commitish="${GITHUB_SHA}")
+          if [ -f "$NOTES" ]; then
+            ARGS+=(-F body=@"$NOTES")
+          else
+            echo "::warning::ไม่พบ ${NOTES} — release จะไม่มีคำอธิบาย"
+          fi
+          if [ "$PUBLISH" = "true" ]; then
+            ARGS+=(-F draft=false)
+          fi
+          gh api -X PATCH "repos/${REPO}/releases/${ID}" "${ARGS[@]}" --jq '"Release: " + .html_url + " (draft=" + (.draft|tostring) + ")"'
