@@ -40,6 +40,12 @@ npm version minor --no-git-tag-version    # 4.5.0 -> 4.6.0
 > ⚠️ **สำคัญมาก:** ถ้าไม่เพิ่มเลขเวอร์ชัน แอปที่ติดตั้งอยู่จะ **ไม่เห็นอัปเดต**
 > (electron-updater อัปเดตเฉพาะเมื่อเวอร์ชันใหม่ **สูงกว่า** ที่ติดตั้งอยู่)
 
+### 1.5) เขียน Release notes
+- `resources/release-notes.md` — ข้อความสั้นสำหรับลูกค้า electron-builder จะใส่ลง `latest.yml`
+  แล้วแอปจะโชว์ในป๊อปอัป "พบเวอร์ชันใหม่" ก่อนลูกค้ากดติดตั้ง (เขียนเป็นข้อความล้วน ใช้ • แทน markdown)
+- `docs/release-notes/vX.Y.Z.md` — ฉบับเต็มสำหรับหน้า GitHub Release (electron-builder **ไม่**ใส่ body ให้ ต้องคัดลอกไปวางเอง)
+- `src/components/common/WhatsNew.tsx` — หน้าต่าง "มีอะไรใหม่" ที่โชว์หลังอัปเดตเสร็จ (แก้ `WHATS_NEW_VERSION` ด้วย)
+
 ### 2) Build + อัปขึ้น GitHub อัตโนมัติ
 ```powershell
 npm run release

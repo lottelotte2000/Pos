@@ -37,7 +37,8 @@
 |---------|--------|-------|
 | 1.2.4 | ธีม Demon Slayer + ปรับ Dragon Ball + เอฟเฟกต์ไปหลัง | published |
 | 1.2.5 | แก้จอลูกค้าธีมไม่ขึ้น | published |
-| **1.2.6** | แก้ลูกแก้ว Dragon Ball บังปุ่มในหน้าขาย | **⚠️ Draft — รอกด Publish** |
+| 1.2.6 | แก้ลูกแก้ว Dragon Ball บังปุ่มในหน้าขาย | Draft (ข้ามไป 1.2.7 ได้) |
+| **1.2.7** | แพตช์แก้บั๊ก + ระบบกันข้อมูลหาย (สำรองก่อน/หลังอัปเดต, รายวัน 14 วัน) — ดู `docs/release-notes/v1.2.7.md` | **รอ build + Publish** |
 
 > **ค้างอยู่:** v1.2.6 อัป installer + latest.yml + release notes ครบแล้ว เหลือกด **Publish release** ที่
 > <https://github.com/lottelotte2000/Pos/releases> เพื่อให้ลูกค้าได้รับอัปเดต
@@ -81,7 +82,8 @@ npm run electron:dev   # เว็บ + Electron desktop
 
 ### เทคนิค / ความเรียบร้อย
 - [ ] **ใส่ไอคอนแอป** — ตอน build ขึ้น warning "default Electron icon is used" → เพิ่ม `resources/icon.ico` (256×256)
-- [ ] **อุด `.gitignore`** — `.dev-userdata/` และ `.claude/` ยังไม่ถูก ignore (เสี่ยงเผลอ commit)
+- [x] **อุด `.gitignore`** — `.dev-userdata/` และ `.claude/` (ทำใน 1.2.7)
+- [ ] **ลบไฟล์ขยะใน repo** — `test_output_.txt`, `test_error_.txt`, `upload-for-netlify/`, `.env` (ว่าง)
 - [ ] **Code signing (Windows)** — installer ไม่ได้เซ็น ลูกค้าเจอ SmartScreen เตือน
 - [ ] **ตรวจ security** — `npm audit` รายงาน 35 vulnerabilities (4 critical, 26 high)
 - [ ] **รวมจุดแก้เวอร์ชัน** — ตอนนี้แก้ 3 ที่ (package.json, lock, WhatsNew) → ให้ WhatsNew อ่านจาก package.json อัตโนมัติ
