@@ -11,7 +11,7 @@ import { DragonBallPowerUp } from '../components/common/DragonBallEffects';
 import QuantityModal from '../components/sales/QuantityModal';
 import { Product, CartItem } from '../types';
 import { translateThaiBarcode } from '../utils/thaiBarcode';
-import { Search, ShoppingCart, Trash2, PlusCircle, X, MonitorPlay, MonitorOff, CheckCircle, Clock, Printer, Package, Smartphone } from 'lucide-react';
+import { Search, ShoppingCart, PlusCircle, X, MonitorPlay, MonitorOff, CheckCircle, Clock, Printer, Package, Smartphone } from 'lucide-react';
 
 const SalesPage: React.FC = () => {
     const {
@@ -518,7 +518,6 @@ const SalesPage: React.FC = () => {
                             <CartItemList
                                 items={activeTabData.items}
                                 onQuantityChange={handleQuantityChangeInCart}
-                                onEditRequest={() => {}}
                                 onRequestRemoveItem={(index) => modalHandlers.openConfirmRemoveItemModal(activeTabData.items[index], index)}
                             />
                         ) : (

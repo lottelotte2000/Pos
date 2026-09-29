@@ -306,7 +306,9 @@ ipcMain.handle('write-data', async (event, dataFromFrontend) => {
       if (originalUser) {
         return { ...feUser, password: originalUser.password };
       }
-      return feUser;
+      // ผู้ใช้ใหม่ต้องสร้างผ่าน create-user (ซึ่ง hash ให้) เท่านั้น — ห้ามเก็บรหัสผ่านที่ไม่ใช่ bcrypt hash ลงไฟล์
+      const { password, ...rest } = feUser;
+      return typeof password === 'string' && /^\$2[aby]\$/.test(password) ? feUser : rest;
     });
   }
 

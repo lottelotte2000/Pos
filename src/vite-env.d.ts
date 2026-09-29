@@ -15,10 +15,10 @@ declare global {
         getBackupPath: () => Promise<string | null>;
         createManualBackup: () => Promise<{ success: boolean; path?: string; message: string }>;
         restoreBackup: () => Promise<{ success: boolean; message: string }>;
-        onUpdateMessage: (callback: (event: any, text: string) => void) => void;
-        onUpdateProgress: (callback: (event: any, progressObj: { percent: number }) => void) => void;
+        onUpdateMessage: (callback: (event: unknown, text: string) => void) => void;
+        onUpdateProgress: (callback: (event: unknown, progressObj: { percent: number }) => void) => void;
         onUpdateReady: (callback: () => void) => void;
-        onUpdateAvailable: (callback: (event: any, info: any) => void) => void;
+        onUpdateAvailable: (callback: (event: unknown, info: { version: string; releaseNotes?: string | { version?: string; note: string | null }[] | null }) => void) => void;
         checkForUpdates: () => Promise<{ success: boolean; message: string }>;
         installUpdate: () => void;
         restartApp: () => void;
@@ -34,4 +34,3 @@ declare global {
     }
 }
 
-declare module 'file-saver';

@@ -16,7 +16,7 @@ interface DataContextType {
   updateUser: (id: string, data: Partial<Omit<User, 'id' | 'createdAt' | 'password'>> & { password?: string }) => Promise<{ success: boolean; message?: string }>;
   deleteUser: (id: string) => boolean;
   findUserByUsername: (username: string) => User | undefined;
-  bulkImportUsers: (usersToImport: User[]) => Promise<{ addedCount: number; updatedCount: number; skippedUsernameCount: number }>;
+  bulkImportUsers: (usersToImport: User[]) => Promise<{ addedCount: number; updatedCount: number; skippedUsernameCount: number; failedCount: number }>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -66,6 +66,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   // Save data back to file
   useEffect(() => {
     if (!dataLoadedRef.current || !window.electronAPI) return;
+    // จอลูกค้าเป็นหน้าต่างแสดงผลอย่างเดียว — ห้ามบันทึก ไม่งั้นจะเขียนทับข้อมูลล่าสุดของหน้าต่างหลัก (เช่นบิลที่เพิ่งขาย) ด้วยข้อมูลเก่า
+    if (window.location.hash.startsWith('#/customer-display')) return;
 
     const appDataToSave: AppData = { products, transactions, users, receiptSettings, customerDisplaySettings, soundSettings, posSettings };
 
@@ -154,8 +156,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   const findUserByUsername = useCallback((username: string): User | undefined => users.find(u => u.username.toLowerCase() === username.toLowerCase()), [users]);
 
-  const bulkImportUsers = useCallback(async (usersToImport: User[]): Promise<{ addedCount: number; updatedCount: number; skippedUsernameCount: number }> => {
+  const bulkImportUsers = useCallback(async (usersToImport: User[]): Promise<{ addedCount: number; updatedCount: number; skippedUsernameCount: number; failedCount: number }> => {
     let addedCount = 0;
+    let failedCount = 0;
     let updatedCount = 0;
     let skippedUsernameCount = 0;
 
@@ -173,6 +176,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         if (result.success) {
           currentUsers = currentUsers.map(u => u.id === existingUserById.id ? { ...u, ...user } : u);
           updatedCount++;
+        } else {
+          failedCount++;
         }
       } else if (existingUserByName) {
         // Skip: username already taken by a different account
@@ -186,10 +191,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           // Add to local snapshot so subsequent iterations see this user
           currentUsers.push({ ...user });
           addedCount++;
+        } else {
+          // เช่น ไฟล์สำรองไม่มีรหัสผ่าน (ไฟล์ export ตัดรหัสผ่านออกเสมอ) → สร้างผู้ใช้ใหม่ไม่ได้
+          failedCount++;
         }
       }
     }
-    return { addedCount, updatedCount, skippedUsernameCount };
+    return { addedCount, updatedCount, skippedUsernameCount, failedCount };
   }, [users, addUser, updateUser]);
 
   const contextValue = {

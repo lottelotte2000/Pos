@@ -1,19 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CartItem as CartItemType } from '../types';
-import { Trash2, Edit3, PlusSquare, MinusSquare } from 'lucide-react';
+import { CartItem as CartItemType } from '../../types';
+import { Trash2, PlusSquare, MinusSquare } from 'lucide-react';
 
 interface CartItemListProps {
   items: CartItemType[];
   onRequestRemoveItem: (index: number) => void;
   onQuantityChange: (index: number, change: number) => void;
-  onEditRequest: (item: CartItemType, index: number) => void;
 }
 
 const CartItemList: React.FC<CartItemListProps> = ({
   items,
   onRequestRemoveItem,
   onQuantityChange,
-  onEditRequest,
 }) => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingQuantity, setEditingQuantity] = useState<string>('');
