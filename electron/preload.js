@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getBackupPath: () => ipcRenderer.invoke('get-backup-path'),
   createManualBackup: () => ipcRenderer.invoke('create-manual-backup'),
   restoreBackup: () => ipcRenderer.invoke('restore-backup'),
+  openBackupFolder: () => ipcRenderer.invoke('open-backup-folder'),
 
   onUpdateMessage: (callback) => ipcRenderer.on('update-message', (...args) => callback(...args)),
   onUpdateProgress: (callback) => ipcRenderer.on('update-progress', (...args) => callback(...args)),
@@ -31,5 +32,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   closeCustomerDisplay: () => ipcRenderer.send('close-customer-display'),
   // ✅ เพิ่มฟังก์ชันรับ-ส่งข้อมูล QR Code
   sendCustomerDisplayAction: (action) => ipcRenderer.send('customer-display-action', action),
+  // โปรแกรมหลักขอให้บันทึกข้อมูลค้างทันที (ก่อนปิด/ก่อนอัปเดต) → ตอบกลับเมื่อเสร็จ
+  onFlushRequest: (callback) => ipcRenderer.on('flush-data', async () => {
+    try { await callback(); } finally { ipcRenderer.send('flush-done'); }
+  }),
   onCustomerDisplayAction: (callback) => ipcRenderer.on('customer-display-action', (event, action) => callback(action)),
 });

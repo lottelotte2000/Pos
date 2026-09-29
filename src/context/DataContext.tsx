@@ -54,7 +54,11 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             setPosSettings(mergedPos);
           }
         } catch (error) {
+          // โหลดไม่สำเร็จ → ห้ามเปิดการบันทึกอัตโนมัติ ไม่งั้นข้อมูลว่างในหน้าจอจะไปลบข้อมูลจริงในฐานข้อมูล
           console.error('[DataContext] Error loading data:', error);
+          alert('โหลดข้อมูลไม่สำเร็จ — ระบบจะไม่บันทึกอะไรทับข้อมูลเดิม\nกรุณาปิดแล้วเปิดโปรแกรมใหม่ หากยังเป็นอยู่ให้กู้คืนจากไฟล์สำรอง');
+          setIsDataLoaded(true);
+          return;
         }
       }
       setIsDataLoaded(true);
@@ -63,11 +67,28 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     loadData();
   }, [setProducts, setReceiptSettings, setCustomerDisplaySettings, setSoundSettings, setPosSettings]);
 
+  const isCustomerDisplay = () => window.location.hash.startsWith('#/customer-display');
+
+  // เก็บข้อมูลล่าสุดไว้ให้ flush ใช้ (ตอนปิดโปรแกรม/ก่อนอัปเดต บันทึกทันทีไม่ต้องรอ debounce)
+  const latestDataRef = useRef<AppData | null>(null);
+  latestDataRef.current = { products, transactions, users, receiptSettings, customerDisplaySettings, soundSettings, posSettings };
+
+  useEffect(() => {
+    window.electronAPI?.onFlushRequest?.(async () => {
+      if (!dataLoadedRef.current || isCustomerDisplay() || !latestDataRef.current) return;
+      try {
+        await window.electronAPI!.writeData(latestDataRef.current);
+      } catch (error) {
+        console.error('[DataContext] Error flushing data:', error);
+      }
+    });
+  }, []);
+
   // Save data back to file
   useEffect(() => {
     if (!dataLoadedRef.current || !window.electronAPI) return;
     // จอลูกค้าเป็นหน้าต่างแสดงผลอย่างเดียว — ห้ามบันทึก ไม่งั้นจะเขียนทับข้อมูลล่าสุดของหน้าต่างหลัก (เช่นบิลที่เพิ่งขาย) ด้วยข้อมูลเก่า
-    if (window.location.hash.startsWith('#/customer-display')) return;
+    if (isCustomerDisplay()) return;
 
     const appDataToSave: AppData = { products, transactions, users, receiptSettings, customerDisplaySettings, soundSettings, posSettings };
 

@@ -15,6 +15,7 @@ declare global {
         getBackupPath: () => Promise<string | null>;
         createManualBackup: () => Promise<{ success: boolean; path?: string; message: string }>;
         restoreBackup: () => Promise<{ success: boolean; message: string }>;
+        openBackupFolder: () => Promise<{ success: boolean; path: string; message?: string }>;
         onUpdateMessage: (callback: (event: unknown, text: string) => void) => void;
         onUpdateProgress: (callback: (event: unknown, progressObj: { percent: number }) => void) => void;
         onUpdateReady: (callback: () => void) => void;
@@ -26,6 +27,7 @@ declare global {
         openCustomerDisplay: () => void;
         closeCustomerDisplay: () => void;
         sendCustomerDisplayAction: (action: { type: string; payload?: unknown }) => void;
+        onFlushRequest: (callback: () => Promise<void>) => void;
         onCustomerDisplayAction: (callback: (action: { type: string; payload?: unknown }) => void) => void;
     }
 
