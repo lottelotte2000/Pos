@@ -49,7 +49,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # electron-builder ไม่ใส่คำอธิบาย release ให้ → ใส่ชื่อ + release notes จาก docs/release-notes/vX.Y.Z.md
-      - name: Set release title and notes
+      # และตรวจว่ามีไฟล์ครบ 3 ไฟล์ (ตัวติดตั้ง, blockmap, latest.yml) — ขาด latest.yml แอปลูกค้าจะมองไม่เห็นอัปเดต
+      - name: Set release title, notes and verify assets
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -57,13 +58,37 @@ jobs:
           PUBLISH: ${{ inputs.publish }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          TITLE="POS System v${VERSION}"
           NOTES="docs/release-notes/v${VERSION}.md"
-          ID=$(gh api "repos/${REPO}/releases" --jq ".[] | select(.tag_name==\"v${VERSION}\") | .id" | head -n1)
+
+          ID=$(gh api "repos/${REPO}/releases" --jq ".[] | select(.tag_name==\"${TAG}\") | .id" | head -n1)
           if [ -z "$ID" ]; then
-            echo "::error::ไม่พบ release v${VERSION}"
+            echo "::error::ไม่พบ release ${TAG}"
             exit 1
           fi
-          ARGS=(-f name="POS System v${VERSION}" -f target_commitish="${GITHUB_SHA}")
+
+          # ลบ draft เก่าของเวอร์ชันเดียวกันที่ค้างจากการรันครั้งก่อน (กันมีซ้ำ)
+          for OLD in $(gh api "repos/${REPO}/releases" --jq ".[] | select(.draft and .name==\"${TITLE}\" and .id != ${ID}) | .id"); do
+            echo "ลบ draft ซ้ำ id=${OLD}"
+            gh api -X DELETE "repos/${REPO}/releases/${OLD}"
+          done
+
+          # ถ้า latest.yml ไม่ได้ถูกอัปขึ้น ให้อัปเอง
+          ASSETS=$(gh api "repos/${REPO}/releases/${ID}/assets" --jq '.[].name')
+          echo "ไฟล์ใน release:"; echo "$ASSETS"
+          if ! echo "$ASSETS" | grep -qx 'latest.yml'; then
+            echo "อัป latest.yml เพิ่ม"
+            gh api -X POST "https://uploads.github.com/repos/${REPO}/releases/${ID}/assets?name=latest.yml" \
+              -H "Content-Type: text/yaml" --input dist_electron/latest.yml --jq '.name'
+            ASSETS=$(gh api "repos/${REPO}/releases/${ID}/assets" --jq '.[].name')
+          fi
+          for f in latest.yml "POS-System-Setup-${VERSION}.exe" "POS-System-Setup-${VERSION}.exe.blockmap"; do
+            echo "$ASSETS" | grep -qxF "$f" || { echo "::error::ไฟล์ ${f} ไม่อยู่ใน release"; exit 1; }
+          done
+
+          # ระบุ tag_name ทุกครั้ง — ถ้าไม่ใส่ GitHub จะเปลี่ยนเป็น untagged-xxxx
+          ARGS=(-f tag_name="${TAG}" -f name="${TITLE}" -f target_commitish="${GITHUB_SHA}")
           if [ -f "$NOTES" ]; then
             ARGS+=(-F body=@"$NOTES")
           else
@@ -72,4 +97,5 @@ jobs:
           if [ "$PUBLISH" = "true" ]; then
             ARGS+=(-F draft=false)
           fi
-          gh api -X PATCH "repos/${REPO}/releases/${ID}" "${ARGS[@]}" --jq '"Release: " + .html_url + " (draft=" + (.draft|tostring) + ")"'
+          gh api -X PATCH "repos/${REPO}/releases/${ID}" "${ARGS[@]}" \
+            --jq '"Release: " + .html_url + " tag=" + .tag_name + " draft=" + (.draft|tostring)'
