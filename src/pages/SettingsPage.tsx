@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { useSettings } from '../context/SettingsContext';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, Theme } from '../context/ThemeContext';
 import { Save, Store, FileText, Folder, Loader2, Info, Smartphone, Palette, Check, Plus, Trash2, Volume2, Play, Square, CheckCircle2, RefreshCw, Package, Sun, Moon, Upload } from 'lucide-react';
 import { ReceiptSettings, SoundSettings } from '../types';
 
@@ -338,11 +338,12 @@ const SettingsPage: React.FC = () => {
               { id: 'newyear', name: 'New Year', color: 'bg-gradient-to-br from-slate-900 via-yellow-500 to-yellow-200' },
               { id: 'songkran', name: 'Songkran', color: 'bg-gradient-to-br from-cyan-400 to-pink-400' },
               { id: 'dragonball', name: 'Dragon Ball', color: 'bg-gradient-to-br from-orange-500 via-amber-400 to-yellow-300 ring-2 ring-orange-400/40' },
-              { id: 'demonslayer', name: 'Demon Slayer', color: 'bg-gradient-to-br from-teal-500 via-cyan-500 to-pink-500 ring-2 ring-teal-400/40' }
+              { id: 'demonslayer', name: 'Demon Slayer', color: 'bg-gradient-to-br from-teal-500 via-cyan-500 to-pink-500 ring-2 ring-teal-400/40' },
+              { id: 'witcher', name: 'The Witcher 3', color: 'bg-gradient-to-br from-stone-900 via-red-800 to-amber-500 ring-2 ring-amber-500/40' }
             ].map((t) => (
               <button
                 key={t.id}
-                onClick={() => setTheme(t.id as "default" | "midnight" | "sunset" | "light" | "christmas" | "newyear" | "songkran" | "dragonball" | "demonslayer")}
+                onClick={() => setTheme(t.id as Theme)}
                 className={`relative p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 group ${theme === t.id ? 'border-primary-500 bg-white/5' : 'border-transparent hover:bg-white/5'}`}
               >
                 <div className={`w-12 h-12 rounded-full shadow-lg ${t.color} flex items-center justify-center`}>
