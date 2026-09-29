@@ -49,9 +49,7 @@ const Sidebar: React.FC = () => {
     >
       {/* Logo */}
       <div className="h-16 flex items-center px-5" style={{ borderBottom: '1px solid var(--color-border)' }}>
-        <div className="p-1.5 rounded-lg bg-primary-500/15 mr-3">
-          <Store className="h-5 w-5 text-primary-600" />
-        </div>
+        <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-9 w-9 mr-3 shrink-0" />
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-slate-100 truncate">{storeName}</h3>
           <p className="text-[10px] text-slate-600">ระบบขายหน้าร้าน v{appVersion}</p>

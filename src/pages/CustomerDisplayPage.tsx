@@ -423,9 +423,7 @@ const CustomerDisplayPage: React.FC = () => {
         style={{ borderBottom: `1px solid ${p.divider}` }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #3b82f6)' }}>
-            <ShoppingCart size={16} className="text-white" />
-          </div>
+          <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="w-8 h-8" />
           <span className="font-bold text-xl tracking-tight" style={{ color: p.ink }}>
             {customerDisplaySettings?.welcomeMessage?.split(' ')[0] || 'POS'}
           </span>
