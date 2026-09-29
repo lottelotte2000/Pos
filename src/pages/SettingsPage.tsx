@@ -242,10 +242,10 @@ const SettingsPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
             <p className="text-slate-400 leading-relaxed mb-6">
-              ระบบจะทำการสำรองข้อมูลอัตโนมัติทุกครั้งที่มีการเปิด-ปิดโปรแกรม เพื่อป้องกันการสูญหายของข้อมูล <br />
+              ระบบสำรองข้อมูลอัตโนมัติทุกครั้งที่เปิด-ปิดโปรแกรม (เก็บย้อนหลัง 14 วัน) และสำรองเพิ่มทุกครั้ง <b>ก่อนและหลังอัปเดตโปรแกรม</b> กับ <b>ก่อนกู้คืนข้อมูล</b> <br />
               <span className="text-primary-400">แนะนำ:</span> ควรเลือกโฟลเดอร์ที่ซิงค์กับ Cloud (Google Drive, OneDrive)
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <button
                 onClick={handleManualBackup}
                 className="btn btn-secondary flex items-center gap-2 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
@@ -257,6 +257,12 @@ const SettingsPage: React.FC = () => {
                 className="btn btn-secondary flex items-center gap-2 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
               >
                 <Loader2 size={18} /> กู้คืนข้อมูล (Restore)
+              </button>
+              <button
+                onClick={() => window.electronAPI?.openBackupFolder?.()}
+                className="btn btn-secondary flex items-center gap-2"
+              >
+                <Folder size={18} /> เปิดโฟลเดอร์ไฟล์สำรอง
               </button>
             </div>
           </div>

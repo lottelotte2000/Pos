@@ -4,14 +4,6 @@ import { useData } from '../context/DataContext';
 import { User as UserType } from '../types';
 import { saveAs } from 'file-saver';
 
-const EXPECTED_USER_FIELDS = {
-  'id': 'id',
-  'username': 'username',
-  'password': 'password',
-  'role': 'role',
-  'createdAt': 'createdAt'
-};
-
 const UsersPage: React.FC = () => {
   const { users, addUser, deleteUser, updateUser, bulkImportUsers } = useData();
 
@@ -117,6 +109,7 @@ const UsersPage: React.FC = () => {
 
   const handleBackupUsers = () => {
     if (!users || users.length === 0) return;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const usersToExport = users.map(({ password, ...rest }) => rest);
     const blob = new Blob([JSON.stringify(usersToExport, null, 2)], { type: 'application/json' });
     saveAs(blob, `user_backup_${new Date().toISOString().split('T')[0]}.json`);
@@ -146,7 +139,7 @@ const UsersPage: React.FC = () => {
         const usersToImport: UserType[] = [];
         let skipped = 0;
 
-        jsonData.forEach((item: any) => {
+        jsonData.forEach((item: Partial<UserType>) => {
           // Simple validation
           if (item.username && item.role) {
             usersToImport.push({
@@ -161,12 +154,13 @@ const UsersPage: React.FC = () => {
 
         if (usersToImport.length > 0 && bulkImportUsers) {
           const result = await bulkImportUsers(usersToImport);
-          setImportMessage(`นำเข้าสำเร็จ: เพิ่ม ${result.addedCount}, อัปเดต ${result.updatedCount} (ข้าม ${result.skippedUsernameCount})`);
+          const failedNote = result.failedCount > 0 ? `, ไม่สำเร็จ ${result.failedCount} (ผู้ใช้ใหม่ต้องมีช่อง password)` : '';
+          setImportMessage(`นำเข้าสำเร็จ: เพิ่ม ${result.addedCount}, อัปเดต ${result.updatedCount} (ข้าม ${result.skippedUsernameCount}${failedNote})`);
         } else {
           setImportMessage(`ไม่พบข้อมูลที่ถูกต้อง (ข้าม ${skipped})`);
         }
 
-      } catch (error) {
+      } catch {
         setImportMessage("ไฟล์ไม่ถูกต้อง");
       } finally {
         setIsImporting(false);

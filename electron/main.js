@@ -1,11 +1,11 @@
 import electron from 'electron';
-const { app, BrowserWindow, ipcMain, screen, dialog, protocol } = electron;
+const { app, BrowserWindow, ipcMain, screen, dialog, protocol, shell } = electron;
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import electronUpdater from 'electron-updater';
 import bcrypt from 'bcrypt';
-import { initDb, getAppData, saveAppData, importJson, backupTo, restoreFromDb, closeDb } from './db.js';
+import { initDb, getAppData, saveAppData, importJson, backupTo, restoreFromDb, closeDb, quickCheck } from './db.js';
 
 const { autoUpdater } = electronUpdater;
 const SALT_ROUNDS = 10;
@@ -15,6 +15,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 let mainWindow;
 let customerWindow = null;
+// หลังกู้คืนข้อมูลแล้ว ห้ามหน้าจอเขียนข้อมูล (ในหน่วยความจำยังเป็นข้อมูลเก่า) จนกว่าจะรีสตาร์ท
+let dataReplaced = false;
+// อนุญาตให้ปิดหน้าต่างหลักได้ทันที (ตั้งหลังจากสั่งหน้าจอบันทึกข้อมูลค้างเสร็จแล้ว)
+let allowMainWindowClose = false;
 
 // ✅ ลงทะเบียน custom scheme "app://" สำหรับโหลดหน้าเว็บที่ build แล้วในโหมด production
 // (แก้ปัญหา white screen: โมดูล ES script โหลดผ่าน file:// ไม่ได้เพราะ MIME/CORS)
@@ -94,35 +98,94 @@ function writeSettings(settings) {
 }
 
 // ✅ อ่าน/เขียนข้อมูลผ่าน SQLite (better-sqlite3) แทนไฟล์ JSON — รูปแบบ AppData เหมือนเดิม
+// ถ้าอ่านฐานข้อมูลไม่ได้ ให้ throw ออกไป — ห้ามคืนข้อมูลว่าง ไม่งั้นการบันทึกครั้งถัดไปจะลบสินค้า/ผู้ใช้ทั้งหมดทิ้ง
 function readDataFile() {
-  try {
-    return getAppData();
-  } catch (error) {
-    console.error('Main Process: Error reading from database:', error);
-    return initialData;
-  }
+  return getAppData();
 }
 
 function writeDataFile(data) {
   return saveAppData(data);
 }
 
-async function backupDataFile() {
-  const settings = readSettings();
-  const backupDir = settings.backupPath || path.join(userDataPath, 'backups');
+// --- ระบบสำรองข้อมูล ---
+const defaultBackupDir = () => path.join(userDataPath, 'backups');
+const getBackupDir = () => readSettings().backupPath || defaultBackupDir();
+const timestamp = () => new Date().toISOString().replace(/[:.]/g, '-');
 
+// เก็บไฟล์ล่าสุดไว้ keep ไฟล์ต่อ prefix ที่เหลือลบทิ้ง (กันกินพื้นที่)
+function pruneBackups(dir, prefix, keep) {
   try {
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir, { recursive: true });
-    }
-    // สำรองอัตโนมัติ: ใช้ชื่อไฟล์คงที่ (กันกินพื้นที่) — สำเนาฐานข้อมูล SQLite
-    const backupFilePath = path.join(backupDir, 'auto_backup.db');
-    backupTo(backupFilePath);
-    console.log(`Backup created at: ${backupFilePath}`);
+    const files = fs.readdirSync(dir).filter(f => f.startsWith(prefix) && f.endsWith('.db')).sort().reverse();
+    for (const f of files.slice(keep)) fs.rmSync(path.join(dir, f), { force: true });
   } catch (error) {
-    console.error(`Failed to create backup at ${backupDir}:`, error);
-    dialog.showErrorBox('Backup Failed', `Could not create backup at ${backupDir}.`);
+    console.error('pruneBackups failed:', error);
   }
+}
+
+// สร้างไฟล์สำรอง → ถ้าโฟลเดอร์ที่ผู้ใช้เลือกใช้ไม่ได้ (เช่นถอด USB) จะสำรองลงโฟลเดอร์ปกติแทน
+function createBackup(prefix, { keep, name } = {}) {
+  const fileName = name || `${prefix}${timestamp()}.db`;
+  let lastError;
+  for (const dir of [...new Set([getBackupDir(), defaultBackupDir()])]) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      const filePath = path.join(dir, fileName);
+      backupTo(filePath);
+      if (keep) pruneBackups(dir, prefix, keep);
+      console.log(`Backup created at: ${filePath}`);
+      return filePath;
+    } catch (error) {
+      lastError = error;
+      console.error(`Failed to create backup in ${dir}:`, error);
+    }
+  }
+  throw lastError;
+}
+
+// สำรองอัตโนมัติรายวัน (auto-YYYY-MM-DD.db) เก็บย้อนหลัง 14 วัน — ไฟล์ของวันก่อนๆ จะไม่ถูกเขียนทับ
+async function backupDataFile() {
+  try {
+    const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD ตามเวลาเครื่อง
+    createBackup('auto-', { keep: 14, name: `auto-${today}.db` });
+  } catch (error) {
+    dialog.showErrorBox('สำรองข้อมูลไม่สำเร็จ', `ไม่สามารถสำรองข้อมูลได้: ${error.message}`);
+  }
+}
+
+// ขอให้หน้าจอบันทึกข้อมูลที่ยังค้างอยู่ (debounce) ลงฐานข้อมูลทันที — รอไม่เกิน timeoutMs
+function flushRendererData(timeoutMs = 3000) {
+  return new Promise((resolve) => {
+    if (!mainWindow || mainWindow.isDestroyed() || dataReplaced) return resolve();
+    const done = () => {
+      clearTimeout(timer);
+      ipcMain.removeListener('flush-done', done);
+      resolve();
+    };
+    const timer = setTimeout(done, timeoutMs);
+    ipcMain.on('flush-done', done);
+    mainWindow.webContents.send('flush-data');
+  });
+}
+
+// ก่อนติดตั้งอัปเดต: บันทึกข้อมูลค้าง → สำรองข้อมูล → ค่อยติดตั้ง
+async function safeQuitAndInstall() {
+  await flushRendererData();
+  try {
+    createBackup('before-update-', { keep: 10 });
+  } catch (error) {
+    const { response } = await dialog.showMessageBox({
+      type: 'warning',
+      buttons: ['ยกเลิกการอัปเดต', 'อัปเดตต่อ'],
+      defaultId: 0,
+      cancelId: 0,
+      title: 'สำรองข้อมูลไม่สำเร็จ',
+      message: 'ไม่สามารถสำรองข้อมูลก่อนอัปเดตได้',
+      detail: `${error.message}\n\nแนะนำให้ยกเลิก แล้วสำรองข้อมูลด้วยตนเองในหน้าตั้งค่าก่อน`,
+    });
+    if (response === 0) return;
+  }
+  allowMainWindowClose = true;
+  autoUpdater.quitAndInstall();
 }
 
 // --- Window Creation ---
@@ -143,6 +206,16 @@ function createMainWindow() {
   if (!app.isPackaged) {
     // mainWindow.webContents.openDevTools();
   }
+
+  // ก่อนปิดหน้าต่าง ให้หน้าจอบันทึกข้อมูลที่ยังค้างอยู่ก่อน (เช่นบิลที่เพิ่งขายไม่ถึง 2 วินาที)
+  mainWindow.on('close', (event) => {
+    if (allowMainWindowClose) return;
+    event.preventDefault();
+    flushRendererData().finally(() => {
+      allowMainWindowClose = true;
+      mainWindow?.close();
+    });
+  });
 
   mainWindow.on('closed', () => (mainWindow = null));
 }
@@ -180,7 +253,14 @@ function createCustomerDisplay() {
 // ความปลอดภัย: ไม่สร้าง default admin/admin123 อีกต่อไป
 // ถ้าไม่มีผู้ใช้ในระบบ → บังคับให้เข้าหน้า Setup เพื่อสร้างผู้ดูแลระบบด้วยรหัสผ่านที่ผู้ใช้ตั้งเอง
 async function ensureDefaultAdmin() {
-  const data = readDataFile();
+  let data;
+  try {
+    data = readDataFile();
+  } catch (error) {
+    // อ่านฐานข้อมูลไม่ได้ → อย่าสรุปว่า "ไม่มีผู้ใช้" (จะพาไปหน้า Setup ที่สร้างข้อมูลใหม่ทับ)
+    console.error('ensureDefaultAdmin: cannot read database:', error);
+    return;
+  }
   if (!data.users || data.users.length === 0) {
     console.log("No users found → forcing first-time setup wizard.");
     const settings = readSettings();
@@ -194,16 +274,41 @@ async function ensureDefaultAdmin() {
 app.whenReady().then(async () => {
   registerAppProtocol(); // ต้องลงทะเบียนก่อนสร้างหน้าต่างในโหมด production
   initDb(userDataPath, dataFilePath); // เปิดฐานข้อมูล + ย้ายข้อมูลจาก appData.json เดิม (ครั้งเดียว)
+
+  // ตรวจไฟล์ฐานข้อมูล — ถ้าเสีย จะไม่สำรองทับไฟล์สำรองที่ดี และแจ้งให้กู้คืน
+  const integrity = quickCheck();
+  const dbHealthy = integrity === 'ok';
+  if (!dbHealthy) {
+    console.error('[db] quick_check failed:', integrity);
+    dialog.showErrorBox('ฐานข้อมูลอาจเสียหาย',
+      `ตรวจพบปัญหาในไฟล์ฐานข้อมูล:\n${integrity}\n\nแนะนำให้ไปที่ ตั้งค่า → กู้คืนข้อมูล แล้วเลือกไฟล์สำรองล่าสุดจากโฟลเดอร์:\n${getBackupDir()}`);
+  }
+
+  // เปิดเวอร์ชันใหม่ครั้งแรกหลังอัปเดต → สำรองข้อมูลไว้ก่อนที่โค้ดเวอร์ชันใหม่จะเขียนอะไรลงไป
+  const settings = readSettings();
+  const currentVersion = app.getVersion();
+  if (dbHealthy && settings.lastRunVersion && settings.lastRunVersion !== currentVersion) {
+    try {
+      createBackup(`pre-update-v${settings.lastRunVersion}-to-v${currentVersion}-`, { keep: 10 });
+    } catch (error) {
+      console.error('Pre-update backup failed:', error);
+    }
+  }
+  if (settings.lastRunVersion !== currentVersion) {
+    settings.lastRunVersion = currentVersion;
+    writeSettings(settings);
+  }
+
   await ensureDefaultAdmin(); // Ensure admin exists before UI loads
   createMainWindow();
-  backupDataFile();
+  if (dbHealthy) backupDataFile();
   if (app.isPackaged) {
     autoUpdater.checkForUpdatesAndNotify();
   }
 });
 
 app.on('will-quit', () => {
-  backupDataFile();
+  if (!dataReplaced) backupDataFile();
   closeDb();
 });
 
@@ -229,6 +334,11 @@ ipcMain.handle('get-setup-status', () => {
 
 ipcMain.handle('complete-setup', async (event, setupData) => {
   try {
+    // ห้ามเรียกซ้ำหลังตั้งค่าเสร็จแล้ว — ไม่งั้นจะเขียนทับข้อมูลทั้งหมด (สินค้า/บิล/ผู้ใช้) ด้วยข้อมูลเริ่มต้น
+    if (readSettings().isSetupComplete === true) {
+      throw new Error("ระบบถูกตั้งค่าไปแล้ว");
+    }
+
     const { adminUser, settings } = setupData;
     if (!adminUser || !adminUser.password || !settings || !settings.storeName) {
       throw new Error("ข้อมูลการตั้งค่าไม่สมบูรณ์");
@@ -247,7 +357,7 @@ ipcMain.handle('complete-setup', async (event, setupData) => {
       createdAt: new Date().toISOString(),
     };
 
-    const newAppData = { ...initialData };
+    const newAppData = structuredClone(initialData);
     newAppData.users.push(superAdmin);
     newAppData.receiptSettings.storeName = settings.storeName;
 
@@ -278,7 +388,24 @@ ipcMain.handle('read-data', async () => {
 });
 
 ipcMain.handle('write-data', async (event, dataFromFrontend) => {
+  if (dataReplaced) {
+    return { success: false, error: 'ข้อมูลถูกกู้คืนแล้ว รอรีสตาร์ทโปรแกรม' };
+  }
   const currentData = readDataFile();
+
+  // ตาข่ายนิรภัย: ถ้าการบันทึกครั้งนี้จะลบสินค้าเกินครึ่ง ให้สำรองข้อมูลไว้ก่อนเสมอ (กู้คืนได้ถ้าเป็นความผิดพลาด)
+  if (Array.isArray(dataFromFrontend.products)) {
+    const before = currentData.products.length;
+    const after = dataFromFrontend.products.length;
+    if (before >= 10 && after < before / 2) {
+      try {
+        createBackup('before-large-delete-', { keep: 10 });
+      } catch (error) {
+        console.error('Safety backup failed — refusing large delete:', error);
+        return { success: false, error: 'สำรองข้อมูลก่อนลบสินค้าจำนวนมากไม่สำเร็จ จึงยังไม่บันทึก' };
+      }
+    }
+  }
 
   // Protect admin user: Ensure 'admin' user from currentData is preserved if missing in frontend data
   if (dataFromFrontend.users) {
@@ -301,7 +428,9 @@ ipcMain.handle('write-data', async (event, dataFromFrontend) => {
       if (originalUser) {
         return { ...feUser, password: originalUser.password };
       }
-      return feUser;
+      // ผู้ใช้ใหม่ต้องสร้างผ่าน create-user (ซึ่ง hash ให้) เท่านั้น — ห้ามเก็บรหัสผ่านที่ไม่ใช่ bcrypt hash ลงไฟล์
+      const { password, ...rest } = feUser;
+      return typeof password === 'string' && /^\$2[aby]\$/.test(password) ? feUser : rest;
     });
   }
 
@@ -427,23 +556,23 @@ ipcMain.handle('select-backup-path', async () => {
   return null;
 });
 
+ipcMain.handle('open-backup-folder', async () => {
+  const dir = getBackupDir();
+  fs.mkdirSync(dir, { recursive: true });
+  const error = await shell.openPath(dir);
+  return { success: !error, path: dir, message: error };
+});
+
 ipcMain.handle('get-backup-path', () => {
   const settings = readSettings();
   return settings.backupPath || null;
 });
 
 ipcMain.handle('create-manual-backup', async () => {
-  const settings = readSettings();
-  const backupDir = settings.backupPath || path.join(userDataPath, 'backups');
-
   try {
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir, { recursive: true });
-    }
-    // Manual Backup: Use timestamp to keep history — สำเนาฐานข้อมูล SQLite
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupFilePath = path.join(backupDir, `manual-backup-${timestamp}.db`);
-    backupTo(backupFilePath);
+    await flushRendererData();
+    // Manual Backup: Use timestamp to keep history — สำเนาฐานข้อมูล SQLite (ไม่ลบของเก่า)
+    const backupFilePath = createBackup('manual-backup-');
     return { success: true, path: backupFilePath, message: 'Backup created successfully' };
   } catch (error) {
     console.error(`Failed to create manual backup:`, error);
@@ -456,6 +585,7 @@ ipcMain.handle('restore-backup', async () => {
 
   const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
     title: 'เลือกไฟล์เพื่อกู้คืนข้อมูล',
+    defaultPath: getBackupDir(),
     filters: [{ name: 'POS Backup', extensions: ['db', 'json'] }],
     properties: ['openFile']
   });
@@ -467,6 +597,10 @@ ipcMain.handle('restore-backup', async () => {
   const backupFile = filePaths[0];
 
   try {
+    // สำรองข้อมูลปัจจุบันไว้ก่อนเสมอ — เผื่อเลือกไฟล์ผิด จะได้ย้อนกลับได้
+    await flushRendererData();
+    createBackup('before-restore-', { keep: 10 });
+
     if (backupFile.toLowerCase().endsWith('.json')) {
       // ไฟล์สำรองรูปแบบเดิม (.json) → import แบบแทนที่ข้อมูลทั้งหมด
       const parsedData = JSON.parse(fs.readFileSync(backupFile, 'utf-8'));
@@ -485,6 +619,8 @@ ipcMain.handle('restore-backup', async () => {
       if (!res.success) throw new Error(res.error || 'Restore failed');
     }
 
+    // ข้อมูลในหน้าจอยังเป็นของเก่า — ล็อกไม่ให้เขียนทับจนกว่าจะรีสตาร์ท
+    dataReplaced = true;
     // Return success to frontend, let frontend trigger restart
     return { success: true, message: 'Restore successful' };
 
@@ -494,7 +630,11 @@ ipcMain.handle('restore-backup', async () => {
   }
 });
 
-ipcMain.on('restart-app', () => autoUpdater.quitAndInstall());
+// รีสตาร์ทโปรแกรม (ใช้หลังกู้คืนข้อมูล) — app.exit ข้ามการบันทึก/สำรองตอนปิด เพื่อไม่ให้ข้อมูลเก่าในหน้าจอเขียนทับ
+ipcMain.on('restart-app', () => {
+  app.relaunch();
+  app.exit(0);
+});
 ipcMain.on('reload-app', () => {
   mainWindow?.reload();
 });
@@ -577,6 +717,5 @@ ipcMain.handle('check-for-updates', () => {
 ipcMain.handle('install-update', async () => {
   // Perform backup before installing
   console.log("Creating backup before update...");
-  await backupDataFile();
-  autoUpdater.quitAndInstall();
+  await safeQuitAndInstall();
 });

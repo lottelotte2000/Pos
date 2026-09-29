@@ -27,6 +27,8 @@ poslog_*.txt
 lint_output.txt
 test_output.txt
 test_error.txt
+.dev-userdata/
+.claude/
 
 # Editor directories and files
 .vscode/*

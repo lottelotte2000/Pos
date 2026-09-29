@@ -13,7 +13,6 @@ const Header: React.FC = () => {
   useEffect(() => {
     const updateDate = () => {
       const now = new Date();
-      const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
       // Use Buddhist era year by adding 543 if locale is th-TH, but toLocaleDateString might handle it.
       // We will manually format it to match the image format.
       const thMonth = [

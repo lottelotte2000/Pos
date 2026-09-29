@@ -1,22 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Download, RefreshCw, X, ShieldCheck, Info, ChevronDown, ChevronUp } from 'lucide-react';
+
+type ReleaseNotes = string | { version?: string; note: string | null }[] | null;
+
+// แปลง release notes (HTML จาก GitHub) เป็นข้อความล้วน — ไม่ render HTML ตรงๆ เพื่อกันสคริปต์แฝง
+const htmlToText = (html: string): string => {
+  const withBreaks = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|li|h[1-6]|div)>/gi, '\n');
+  const doc = new DOMParser().parseFromString(withBreaks, 'text/html');
+  return (doc.body.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+};
 
 const UpdateNotification: React.FC = () => {
   const [message, setMessage] = useState('');
   const [percent, setPercent] = useState(0);
   const [isUpdateReady, setIsUpdateReady] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [releaseNotes, setReleaseNotes] = useState<string | any[] | null>(null);
+  const [releaseNotes, setReleaseNotes] = useState<ReleaseNotes>(null);
   const [newVersion, setNewVersion] = useState('');
   const [showDetails, setShowDetails] = useState(false);
+  // ใช้ ref เพราะ callback ด้านล่างลงทะเบียนครั้งเดียว — อ่าน state ตรงๆ จะได้ค่าเก่า ('') เสมอ
+  const newVersionRef = useRef('');
 
   useEffect(() => {
     if (!window.electronAPI) return;
 
     // Listen for available update with details
-    window.electronAPI.onUpdateAvailable((_event: any, info: any) => {
+    window.electronAPI.onUpdateAvailable((_event, info) => {
+      newVersionRef.current = info.version;
       setNewVersion(info.version);
-      setReleaseNotes(info.releaseNotes);
+      setReleaseNotes(info.releaseNotes ?? null);
       setMessage(`พบเวอร์ชันใหม่ ${info.version}`);
       setIsVisible(true);
       // Auto expand details if available
@@ -24,8 +36,8 @@ const UpdateNotification: React.FC = () => {
     });
 
     // Listen for update messages (fallback)
-    window.electronAPI.onUpdateMessage((_event: any, text: string) => {
-      if (!newVersion) setMessage(text); // Only set if we don't have specific version info yet
+    window.electronAPI.onUpdateMessage((_event, text) => {
+      if (!newVersionRef.current) setMessage(text); // Only set if we don't have specific version info yet
       setIsVisible(true);
       if (text.includes('ล่าสุด')) {
         setTimeout(() => setIsVisible(false), 5000);
@@ -33,7 +45,7 @@ const UpdateNotification: React.FC = () => {
     });
 
     // Listen for progress
-    window.electronAPI.onUpdateProgress((_event: any, progressObj: { percent: number }) => {
+    window.electronAPI.onUpdateProgress((_event, progressObj) => {
       setPercent(Math.floor(progressObj.percent));
       setIsVisible(true);
     });
@@ -56,15 +68,12 @@ const UpdateNotification: React.FC = () => {
 
     let content;
     if (typeof releaseNotes === 'string') {
-      // Strip HTML tags for safety if needed, or just display as is?
-      // Usually safe from electron-updater source (github/s3)
-      // For simplicity, let's just display text, maybe strip heavy html
-      content = <div className="text-xs text-slate-300 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: releaseNotes }} />;
+      content = <div className="text-xs text-slate-300 whitespace-pre-wrap">{htmlToText(releaseNotes)}</div>;
     } else if (Array.isArray(releaseNotes)) {
       content = (
         <ul className="list-disc list-inside text-xs text-slate-300 space-y-1">
           {releaseNotes.map((note, i) => (
-            <li key={i}>{typeof note === 'string' ? note : note.note}</li>
+            <li key={i}>{htmlToText(note.note || '')}</li>
           ))}
         </ul>
       );

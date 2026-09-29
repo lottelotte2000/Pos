@@ -27,6 +27,10 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 const CART_STORAGE_KEY = 'pos-cart-state-sync';
 
+// ปัดเป็นทศนิยม 2 ตำแหน่ง กันค่าเพี้ยนจาก floating point (เช่น 0.1 + 0.2 = 0.30000000000000004)
+const roundMoney = (n: number): number => Math.round((n + Number.EPSILON) * 100) / 100;
+const calcTotal = (items: CartItem[]): number => roundMoney(items.reduce((sum, i) => sum + i.price * i.quantity, 0));
+
 const createNewTab = (name: string): CartTab => ({
   id: `tab-${Date.now()}`,
   name,
@@ -134,7 +138,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
     }
 
-    activeTab.total = activeTab.items.reduce((sum: number, i: CartItem) => sum + i.price * i.quantity, 0);
+    activeTab.total = calcTotal(activeTab.items);
     updateTabs(newTabs);
     return true;
   }, [tabs, activeTabIndex, findProductByBarcode, updateProductStock, posSettings.preventNegativeStock]);
@@ -163,7 +167,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     updateProductStock(item.id, removeQty);
-    activeTab.total = activeTab.items.reduce((sum: number, i: CartItem) => sum + i.price * i.quantity, 0);
+    activeTab.total = calcTotal(activeTab.items);
     updateTabs(newTabs);
   }, [tabs, activeTabIndex, updateProductStock]);
 
@@ -174,7 +178,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     activeTab.status = 'confirming_payment';
     activeTab.paymentMethod = paymentMethod;
     activeTab.cashReceived = cashReceived;
-    activeTab.changeAmount = paymentMethod === 'cash' ? cashReceived - activeTab.total : 0;
+    activeTab.changeAmount = paymentMethod === 'cash' ? roundMoney(cashReceived - activeTab.total) : 0;
     updateTabs(newTabs);
   }, [tabs, activeTabIndex]);
 
@@ -255,7 +259,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     activeTab.items.push(item);
-    activeTab.total = activeTab.items.reduce((sum: number, i: CartItem) => sum + i.price * i.quantity, 0);
+    activeTab.total = calcTotal(activeTab.items);
     updateTabs(newTabs);
   }, [tabs, activeTabIndex]);
 

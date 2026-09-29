@@ -197,5 +197,16 @@ export function restoreFromDb(srcPath, userDataPath) {
   }
 }
 
+// ตรวจความสมบูรณ์ของไฟล์ฐานข้อมูลแบบเร็ว — คืน 'ok' ถ้าปกติ
+export function quickCheck() {
+  try {
+    const rows = db.pragma('quick_check');
+    const msg = rows.map(r => Object.values(r)[0]).join('; ');
+    return msg || 'ok';
+  } catch (e) {
+    return e.message;
+  }
+}
+
 export function getDbFilePath() { return dbFilePath; }
 export function closeDb() { try { db.pragma('wal_checkpoint(TRUNCATE)'); db.close(); } catch { /* ignore */ } }

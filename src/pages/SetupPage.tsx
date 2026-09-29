@@ -15,7 +15,7 @@ const SetupPage: React.FC = () => {
         if (isSuccess) {
             const timer = setTimeout(() => {
                 // สั่งให้ Electron โหลดแอปใหม่ทั้งหมด
-                window.electronAPI.reloadApp();
+                window.electronAPI?.reloadApp();
             }, 2500); // รอ 2.5 วินาที
             return () => clearTimeout(timer); // Cleanup timer
         }
@@ -40,6 +40,7 @@ const SetupPage: React.FC = () => {
 
         setIsLoading(true);
         try {
+            if (!window.electronAPI) throw new Error('ไม่พบ Electron API');
             const result = await window.electronAPI.completeSetup({
                 adminUser: { username, password },
                 settings: { storeName }
