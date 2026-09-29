@@ -28,9 +28,17 @@ jobs:
           node-version: 20
           cache: npm
 
-      # postinstall จะดึง better-sqlite3 ที่ตรงกับ Electron ให้เอง (scripts/rebuild-native.cjs)
+      # --ignore-scripts: ไม่ให้ better-sqlite3 พยายาม compile สำหรับ Node (ไม่มี prebuild ของ Node 20 และเครื่อง CI ไม่มี C++ toolchain)
+      # แอปใช้ better-sqlite3 ใน Electron อยู่แล้ว → ดึง prebuild ของ Electron ตรงๆ แทน
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
+
+      - name: Fetch better-sqlite3 prebuild for Electron
+        shell: bash
+        run: |
+          node scripts/rebuild-native.cjs
+          test -f node_modules/better-sqlite3/build/Release/better_sqlite3.node \
+            || { echo "::error::ไม่พบ better_sqlite3.node สำหรับ Electron — ตัวติดตั้งจะเปิดฐานข้อมูลไม่ได้"; exit 1; }
 
       - name: Typecheck
         run: npx tsc -p tsconfig.app.json --noEmit
