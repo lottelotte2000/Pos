@@ -99,7 +99,7 @@ function readDataFile() {
     return getAppData();
   } catch (error) {
     console.error('Main Process: Error reading from database:', error);
-    return initialData;
+    return structuredClone(initialData);
   }
 }
 
@@ -229,6 +229,11 @@ ipcMain.handle('get-setup-status', () => {
 
 ipcMain.handle('complete-setup', async (event, setupData) => {
   try {
+    // ห้ามเรียกซ้ำหลังตั้งค่าเสร็จแล้ว — ไม่งั้นจะเขียนทับข้อมูลทั้งหมด (สินค้า/บิล/ผู้ใช้) ด้วยข้อมูลเริ่มต้น
+    if (readSettings().isSetupComplete === true) {
+      throw new Error("ระบบถูกตั้งค่าไปแล้ว");
+    }
+
     const { adminUser, settings } = setupData;
     if (!adminUser || !adminUser.password || !settings || !settings.storeName) {
       throw new Error("ข้อมูลการตั้งค่าไม่สมบูรณ์");
@@ -247,7 +252,7 @@ ipcMain.handle('complete-setup', async (event, setupData) => {
       createdAt: new Date().toISOString(),
     };
 
-    const newAppData = { ...initialData };
+    const newAppData = structuredClone(initialData);
     newAppData.users.push(superAdmin);
     newAppData.receiptSettings.storeName = settings.storeName;
 

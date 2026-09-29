@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Transaction } from '../../types';
-import { Printer, X, Receipt as ReceiptIcon } from 'lucide-react';
+import { Printer, X, Phone, Receipt as ReceiptIcon } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 
 interface ReceiptProps {
