@@ -28,6 +28,11 @@ lint_output.txt
 test_output.txt
 test_error.txt
 .dev-userdata/
+test_output_*.txt
+test_error_*.txt
+upload-for-netlify/
+.env
+.env.*
 .claude/
 
 # Editor directories and files
