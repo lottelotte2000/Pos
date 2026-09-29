@@ -189,10 +189,14 @@ async function safeQuitAndInstall() {
 }
 
 // --- Window Creation ---
+// ไอคอนหน้าต่างตอนรัน dev (ตอนติดตั้งจริง Windows ใช้ไอคอนจาก .exe ที่ electron-builder ฝังจาก resources/icon.ico)
+const devIconPath = path.join(__dirname, '../resources/icon.png');
+
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    ...(fs.existsSync(devIconPath) ? { icon: devIconPath } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

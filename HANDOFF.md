@@ -38,7 +38,8 @@
 | 1.2.4 | ธีม Demon Slayer + ปรับ Dragon Ball + เอฟเฟกต์ไปหลัง | published |
 | 1.2.5 | แก้จอลูกค้าธีมไม่ขึ้น | published |
 | 1.2.6 | แก้ลูกแก้ว Dragon Ball บังปุ่มในหน้าขาย | Draft (ข้ามไป 1.2.7 ได้) |
-| **1.2.7** | แพตช์แก้บั๊ก + ระบบกันข้อมูลหาย (สำรองก่อน/หลังอัปเดต, รายวัน 14 วัน) — ดู `docs/release-notes/v1.2.7.md` | **รอ build + Publish** |
+| 1.2.7 | แพตช์แก้บั๊ก + ระบบกันข้อมูลหาย (สำรองก่อน/หลังอัปเดต, รายวัน 14 วัน) | published |
+| **1.2.8** | ไอคอน/โลโก้ใหม่ + ธีม The Witcher 3 — ดู `docs/release-notes/v1.2.8.md` | build ผ่าน Actions |
 
 > **ค้างอยู่:** v1.2.6 อัป installer + latest.yml + release notes ครบแล้ว เหลือกด **Publish release** ที่
 > <https://github.com/lottelotte2000/Pos/releases> เพื่อให้ลูกค้าได้รับอัปเดต
@@ -81,13 +82,13 @@ npm run electron:dev   # เว็บ + Electron desktop
 ## 🔧 สิ่งที่ควรทำต่อ (เรียงตามความสำคัญ)
 
 ### เทคนิค / ความเรียบร้อย
-- [ ] **ใส่ไอคอนแอป** — ตอน build ขึ้น warning "default Electron icon is used" → เพิ่ม `resources/icon.ico` (256×256)
+- [x] **ใส่ไอคอนแอป** (1.2.8) — ตอน build ขึ้น warning "default Electron icon is used" → เพิ่ม `resources/icon.ico` (256×256)
 - [x] **อุด `.gitignore`** — `.dev-userdata/` และ `.claude/` (ทำใน 1.2.7)
-- [ ] **ลบไฟล์ขยะใน repo** — `test_output_.txt`, `test_error_.txt`, `upload-for-netlify/`, `.env` (ว่าง)
+- [x] **ลบไฟล์ขยะใน repo** — `test_output_.txt`, `test_error_.txt`, `upload-for-netlify/`, `.env` (ว่าง)
 - [ ] **Code signing (Windows)** — installer ไม่ได้เซ็น ลูกค้าเจอ SmartScreen เตือน
 - [ ] **ตรวจ security** — `npm audit` รายงาน 35 vulnerabilities (4 critical, 26 high)
 - [ ] **รวมจุดแก้เวอร์ชัน** — ตอนนี้แก้ 3 ที่ (package.json, lock, WhatsNew) → ให้ WhatsNew อ่านจาก package.json อัตโนมัติ
-- [ ] **GitHub Actions CI** — push tag แล้ว build+release อัตโนมัติ (ไม่ต้องถือ token เอง)
+- [x] **GitHub Actions CI** — `.github/workflows/release.yml` (Actions → Release → Run workflow) — push tag แล้ว build+release อัตโนมัติ (ไม่ต้องถือ token เอง)
 - [ ] **เพิ่ม unit test** — ยังไม่มี test framework; จุดเสี่ยงสุดคือคำนวณเงิน/ทอน/สต็อก
 
 ### ฟีเจอร์ (ยังไม่มีในระบบ)

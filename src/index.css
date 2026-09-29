@@ -283,6 +283,44 @@
       radial-gradient(circle at 6% 96%, rgba(139, 92, 246, 0.12) 0%, transparent 42%);
   }
 
+  [data-theme="witcher"] {
+    /* THE WITCHER 3 — เหล็กดำไหม้ + เลือดแดงหม่น + ทองเก่า + เงินเย็นใต้แสงจันทร์
+       (งานวาดต้นฉบับทั้งหมด ไม่ใช้โลโก้/ตัวละคร/ทรัพย์สินลิขสิทธิ์จากเกม) */
+    --color-bg-base: #0e0c0b;
+    /* Charred iron */
+    --color-bg-surface: #1a1614;
+    --color-bg-surface2: #231e1a;
+    --color-bg-card: #1c1815;
+    --color-bg-sidebar: #0f0d0b;
+    --color-border: rgba(201, 164, 76, 0.16);
+    --color-text-main: #efe6d8;
+    /* Parchment */
+    --color-text-muted: #b49a6a;
+    --color-text-sub: #d8c7a6;
+
+    /* Blood-crimson ramp (primary) */
+    --color-primary-50: #fdf3f2;
+    --color-primary-100: #fbe3e0;
+    --color-primary-200: #f5c2bc;
+    --color-primary-300: #ec9990;
+    --color-primary-400: #de6558;
+    --color-primary-500: #c0392b;
+    --color-primary-600: #a32d22;
+    --color-primary-700: #86241b;
+    --color-primary-800: #6b1d16;
+    --color-primary-900: #561812;
+    --color-primary-950: #2e0b08;
+
+    --color-secondary-500: #c9a44c;
+    /* Old gold */
+
+    /* แสงจันทร์เย็นด้านบน, ไฟถ่านแดงส้มด้านล่าง, หมอกเลือดจางมุมซ้าย */
+    --bg-image:
+      radial-gradient(circle at 82% -8%, rgba(191, 208, 230, 0.13) 0%, transparent 42%),
+      radial-gradient(circle at 50% 112%, rgba(234, 88, 12, 0.16) 0%, transparent 46%),
+      radial-gradient(circle at 4% 70%, rgba(153, 27, 27, 0.14) 0%, transparent 40%);
+  }
+
   /* ============================================================
      LIGHT MODE — overrides neutral surfaces/text/border.
      Placed AFTER the decorative themes so it wins for surfaces,
@@ -745,5 +783,53 @@
 [data-theme="demonslayer"] .db-pay-btn:hover { filter: brightness(1.08) saturate(1.1); }
 [data-theme="demonslayer"] .db-pay-btn:active {
   box-shadow: 0 0 46px 12px rgba(20, 184, 166, 1), 0 0 92px 22px rgba(34, 211, 238, 0.7) !important;
+  transform: scale(0.97);
+}
+/* ============================================================
+   THE WITCHER 3 — หมอก, ถ่านไฟลอย, อักษรรูนเรืองแสง, ตราหมาป่า
+   ============================================================ */
+/* หมอกลอยช้าๆ ข้ามจอ */
+@keyframes wt-fog-drift {
+  0%, 100% { transform: translateX(-8vw); opacity: 0.35; }
+  50%      { transform: translateX(8vw);  opacity: 0.6; }
+}
+.wt-fog { position: absolute; border-radius: 999px; filter: blur(40px); will-change: transform, opacity; }
+
+/* ถ่านไฟลอยขึ้นพร้อมส่ายตามลม */
+@keyframes wt-ember-rise {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+  12%  { opacity: 1; }
+  50%  { transform: translate(2.5vw, -36vh) scale(0.7); }
+  100% { transform: translate(-1.5vw, -78vh) scale(0.2); opacity: 0; }
+}
+.wt-ember { position: absolute; border-radius: 999px; will-change: transform, opacity; }
+
+/* อักษรรูนเรืองแสงเป็นจังหวะ */
+@keyframes wt-rune-glow {
+  0%, 100% { opacity: 0.22; filter: drop-shadow(0 0 2px rgba(234, 88, 12, 0.3)); }
+  50%      { opacity: 0.75; filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.9)); }
+}
+.wt-rune { position: absolute; animation: wt-rune-glow 5s ease-in-out infinite; }
+
+/* ดวงตาตราหมาป่ากะพริบแดง */
+@keyframes wt-eye-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+.wt-eye { animation: wt-eye-pulse 3.2s ease-in-out infinite; }
+
+/* ปุ่ม "ชำระเงิน" — เปลวไฟแดงส้มลุกโชน (เฉพาะธีม witcher) */
+@keyframes wt-flame-glow {
+  0%, 100% { box-shadow: 0 0 14px 2px rgba(185, 28, 28, 0.55), 0 0 34px 6px rgba(234, 88, 12, 0.28); }
+  50%      { box-shadow: 0 0 24px 5px rgba(220, 38, 38, 0.85), 0 0 56px 12px rgba(249, 115, 22, 0.45); }
+}
+[data-theme="witcher"] .db-pay-btn {
+  background-image: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 55%, #c2410c 100%) !important;
+  border: 1px solid rgba(201, 164, 76, 0.55);
+  animation: wt-flame-glow 1.7s ease-in-out infinite;
+}
+[data-theme="witcher"] .db-pay-btn:hover { filter: brightness(1.1) saturate(1.1); }
+[data-theme="witcher"] .db-pay-btn:active {
+  box-shadow: 0 0 44px 12px rgba(220, 38, 38, 1), 0 0 90px 22px rgba(249, 115, 22, 0.7) !important;
   transform: scale(0.97);
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Lock, User, AlertCircle, Loader2, LogIn } from 'lucide-react';
+import { Lock, User, AlertCircle, Loader2, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext'; // ✅ 1. เปลี่ยนมาใช้ useSettings
 import { useNavigate } from 'react-router-dom'; // ✅ 2. Import useNavigate สำหรับการ redirect
@@ -55,9 +55,7 @@ const LoginPage: React.FC = () => {
 
       <div className="card max-w-md w-full p-8 border-white/10 shadow-2xl animate-slide-up bg-black/40 backdrop-blur-xl">
         <div className="text-center mb-8">
-          <div className="inline-flex justify-center items-center p-4 rounded-2xl bg-gradient-to-tr from-primary-500 to-violet-500 shadow-lg shadow-primary-500/30 mb-6">
-            <ShoppingBag className="h-10 w-10 text-white" />
-          </div>
+          <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="inline-block h-20 w-20 mb-6 drop-shadow-lg" />
           <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
             {receiptSettings?.storeName || 'POS System'}
           </h1>

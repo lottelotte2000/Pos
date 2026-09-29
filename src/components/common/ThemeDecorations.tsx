@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 
 export const ThemeDecorations: React.FC = () => {
@@ -29,6 +29,10 @@ export const ThemeDecorations: React.FC = () => {
 
   if (theme === 'demonslayer') {
     return <DemonSlayerDecorations />;
+  }
+
+  if (theme === 'witcher') {
+    return <WitcherDecorations />;
   }
 
   return null;
@@ -258,6 +262,210 @@ const DemonSlayerDecorations = () => {
           WebkitMaskImage: 'linear-gradient(to bottom left, black, transparent 70%)',
         }}
       />
+    </div>
+  );
+};
+
+// ============================================================
+// THE WITCHER 3 — งานวาดต้นฉบับ (ไม่ใช้โลโก้/ตราหรือตัวละครจากเกม)
+// ============================================================
+
+// ตราหัวหมาป่าในวงแหวน — วาดเองแบบเรขาคณิต ดวงตาเรืองแดง
+const WtWolfEmblem: React.FC<{ size: number }> = ({ size }) => (
+  <svg width={size} height={size} viewBox="0 0 200 200">
+    <defs>
+      <linearGradient id="wt-steel" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#e5e7eb" />
+        <stop offset="55%" stopColor="#9ca3af" />
+        <stop offset="100%" stopColor="#4b5563" />
+      </linearGradient>
+      <linearGradient id="wt-gold" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#f3d98b" />
+        <stop offset="100%" stopColor="#8a6a24" />
+      </linearGradient>
+    </defs>
+    {/* วงแหวนนอก + วงแหวนรูนจุดๆ */}
+    <circle cx="100" cy="100" r="92" fill="none" stroke="url(#wt-gold)" strokeWidth="5" />
+    <circle cx="100" cy="100" r="80" fill="rgba(14,12,11,0.55)" stroke="#6b5424" strokeWidth="2" strokeDasharray="3 7" />
+    {/* หัวหมาป่า (สมมาตร) */}
+    <path
+      d="M100 70 L82 78 L62 38 L56 92 L40 110 L62 118 L74 140 L92 150 L100 170 L108 150 L126 140 L138 118 L160 110 L144 92 L138 38 L118 78 Z"
+      fill="url(#wt-steel)"
+      stroke="#1f2937"
+      strokeWidth="3"
+      strokeLinejoin="round"
+    />
+    {/* หูด้านใน */}
+    <path d="M66 50 L70 80 L80 78 Z M134 50 L130 80 L120 78 Z" fill="#374151" />
+    {/* สันจมูก + ขนแก้ม */}
+    <path d="M100 96 L100 150 M74 122 L88 128 M126 122 L112 128" stroke="#374151" strokeWidth="3" strokeLinecap="round" fill="none" />
+    <path d="M92 150 L100 160 L108 150 Z" fill="#111827" />
+    {/* ดวงตาเรืองแดง */}
+    <g className="wt-eye" fill="#ef4444" style={{ filter: 'drop-shadow(0 0 4px #dc2626)' }}>
+      <path d="M74 102 L94 108 L80 115 Z" />
+      <path d="M126 102 L106 108 L120 115 Z" />
+    </g>
+  </svg>
+);
+
+// ดาบยาวยุโรป (โกร่งไม้กางเขน) — silver=true คือดาบเงินล่าอสูร มีรอยสลักรูนบนใบ
+const WtSword: React.FC<{ length: number; silver?: boolean }> = ({ length, silver }) => (
+  <svg width={length} height={length * 0.14} viewBox="0 0 300 42" style={{ overflow: 'visible' }}>
+    <defs>
+      <linearGradient id={silver ? 'wt-blade-silver' : 'wt-blade-steel'} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor={silver ? '#f8fafc' : '#cbd5e1'} />
+        <stop offset="50%" stopColor={silver ? '#cbd5e1' : '#94a3b8'} />
+        <stop offset="100%" stopColor={silver ? '#94a3b8' : '#475569'} />
+      </linearGradient>
+    </defs>
+    {/* ปุ่มท้ายด้าม */}
+    <circle cx="10" cy="21" r="7" fill="#b08d3c" stroke="#5c4715" strokeWidth="1.5" />
+    {/* ด้ามหนังพัน */}
+    <rect x="16" y="16" width="54" height="10" rx="3" fill="#3f2a1d" />
+    {[24, 32, 40, 48, 56, 64].map((x) => (
+      <line key={x} x1={x} y1="16" x2={x - 5} y2="26" stroke="#6b4a33" strokeWidth="1.6" />
+    ))}
+    {/* โกร่งกางเขน */}
+    <rect x="70" y="2" width="8" height="38" rx="3" fill="#b08d3c" stroke="#5c4715" strokeWidth="1.5" />
+    {/* ใบดาบ + ร่องเลือด */}
+    <path d="M78 14 L278 15 L298 21 L278 27 L78 28 Z" fill={`url(#${silver ? 'wt-blade-silver' : 'wt-blade-steel'})`} stroke="#334155" strokeWidth="1" />
+    <line x1="84" y1="21" x2="250" y2="21" stroke={silver ? '#64748b' : '#334155'} strokeWidth="2" />
+    {silver &&
+      [110, 140, 170, 200].map((x) => (
+        <path key={x} d={`M${x} 17 l4 4 l-4 4 M${x + 8} 17 v8`} stroke="#60a5fa" strokeWidth="1.2" fill="none" opacity="0.8" />
+      ))}
+  </svg>
+);
+
+// อักษรรูนโบราณ (Elder Futhark — ตัวอักษรสาธารณะ) ใน viewBox 40×60
+const WT_RUNES = [
+  'M12 4 V56 M12 10 L30 2 M12 24 L30 16', // fehu
+  'M10 4 V56 M10 4 L28 14 L10 26 L30 56', // raido
+  'M20 4 V56 M20 24 L6 6 M20 24 L34 6', // algiz
+  'M20 4 L32 18 L8 44 M20 4 L8 18 L32 44', // othala
+  'M6 6 V54 L34 6 V54 L6 6', // dagaz
+  'M10 4 V56 M10 18 L26 30 L10 42', // thurisaz
+];
+
+const WitcherDecorations = () => {
+  // สุ่มครั้งเดียวต่อการ mount — ไม่ให้ตำแหน่งกระโดดทุกครั้งที่ re-render
+  const embers = useMemo(
+    () =>
+      Array.from({ length: 26 }).map((_, i) => ({
+        id: `wt-ember-${i}`,
+        left: `${Math.random() * 100}vw`,
+        size: Math.random() * 4 + 3,
+        delay: `${Math.random() * 7}s`,
+        duration: `${Math.random() * 4 + 6}s`,
+        hot: Math.random() > 0.35,
+      })),
+    []
+  );
+  const fogs = useMemo(
+    () => [
+      { id: 'f1', bottom: '-6%', left: '-10%', w: '70vw', h: 220, dur: '26s', delay: '0s' },
+      { id: 'f2', bottom: '4%', left: '35%', w: '75vw', h: 180, dur: '32s', delay: '-8s' },
+      { id: 'f3', bottom: '18%', left: '-5%', w: '50vw', h: 140, dur: '38s', delay: '-16s' },
+    ],
+    []
+  );
+  const runes = useMemo(
+    () => [
+      { top: '14%', left: '5%', size: 34, rune: 0, delay: '0s' },
+      { top: '46%', left: '2.5%', size: 28, rune: 2, delay: '1.6s' },
+      { top: '30%', left: '13%', size: 30, rune: 4, delay: '3.1s' },
+      { top: '10%', left: '62%', size: 26, rune: 1, delay: '2.3s' },
+      { top: '40%', left: '94%', size: 30, rune: 3, delay: '0.8s' },
+      { top: '58%', left: '90%', size: 24, rune: 5, delay: '4s' },
+    ],
+    []
+  );
+
+  return (
+    <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+      {/* พระจันทร์เต็มดวงซีดเย็น มุมบนขวา */}
+      <div
+        className="absolute rounded-full"
+        style={{
+          top: '5%',
+          right: '7%',
+          width: 120,
+          height: 120,
+          background: 'radial-gradient(circle at 38% 36%, #f5f7fa 0%, #cbd5e1 45%, #7c8796 100%)',
+          boxShadow: '0 0 60px 18px rgba(191,208,230,0.22), 0 0 140px 50px rgba(148,163,184,0.10)',
+          opacity: 0.55,
+        }}
+      />
+
+      {/* ไฟถ่านแดงส้มคุด้านล่าง */}
+      <div
+        className="absolute rounded-full blur-3xl animate-pulse-slow"
+        style={{ width: 900, height: 420, bottom: '-26%', left: '50%', transform: 'translateX(-50%)', background: 'radial-gradient(ellipse, rgba(234,88,12,0.20), rgba(153,27,27,0.12) 45%, transparent 72%)' }}
+      />
+
+      {/* หมอกลอย */}
+      {fogs.map((f) => (
+        <div
+          key={f.id}
+          className="wt-fog"
+          style={{
+            bottom: f.bottom,
+            left: f.left,
+            width: f.w,
+            height: f.h,
+            background: 'radial-gradient(ellipse, rgba(203,213,225,0.10), transparent 70%)',
+            animation: `wt-fog-drift ${f.dur} ease-in-out ${f.delay} infinite`,
+          }}
+        />
+      ))}
+
+      {/* อักษรรูนเรืองแสง */}
+      {runes.map((r, i) => (
+        <svg
+          key={`wt-rune-${i}`}
+          className="wt-rune"
+          width={r.size}
+          height={r.size * 1.5}
+          viewBox="0 0 40 60"
+          style={{ top: r.top, left: r.left, animationDelay: r.delay }}
+        >
+          <path d={WT_RUNES[r.rune]} fill="none" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ))}
+
+      {/* ถ่านไฟลอยขึ้น */}
+      {embers.map((e) => (
+        <div
+          key={e.id}
+          className="wt-ember"
+          style={{
+            left: e.left,
+            bottom: '-2vh',
+            width: e.size,
+            height: e.size,
+            background: e.hot ? '#fb923c' : '#ef4444',
+            boxShadow: `0 0 8px ${e.hot ? '#f97316' : '#b91c1c'}`,
+            animation: `wt-ember-rise ${e.duration} ease-out ${e.delay} infinite`,
+          }}
+        />
+      ))}
+
+      {/* ดาบเหล็ก + ดาบเงินไขว้ มุมล่างซ้าย */}
+      <div className="absolute" style={{ bottom: '8%', left: '4%', width: 280, height: 140, opacity: 0.75, filter: 'drop-shadow(0 0 8px rgba(0,0,0,0.8))' }}>
+        <div className="absolute" style={{ top: 50, left: 0, transform: 'rotate(-24deg)' }}><WtSword length={280} /></div>
+        <div className="absolute" style={{ top: 50, left: 0, transform: 'rotate(24deg) scaleX(-1)' }}><WtSword length={280} silver /></div>
+      </div>
+
+      {/* ตราหมาป่า มุมล่างขวา */}
+      <div
+        className="absolute animate-float"
+        style={{ bottom: '7%', right: '5%', opacity: 0.6, filter: 'drop-shadow(0 0 14px rgba(201,164,76,0.35))' }}
+      >
+        <WtWolfEmblem size={150} />
+      </div>
+
+      {/* ขอบมืดรอบจอ (vignette) ให้บรรยากาศหม่น */}
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%)' }} />
     </div>
   );
 };
