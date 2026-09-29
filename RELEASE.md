@@ -1,5 +1,12 @@
 # คู่มือปล่อยเวอร์ชันใหม่ (Auto-Update ผ่าน GitHub Releases)
 
+> ✅ **วิธีง่ายสุด (ไม่ต้อง build บนเครื่อง):** อัปเวอร์ชัน + เขียน release notes แล้ว push ขึ้น `main`
+> จากนั้นไปที่แท็บ **Actions → Release → Run workflow** — GitHub จะสร้างตัวติดตั้งบน Windows
+> อัปขึ้น Releases และใส่ release notes จาก `docs/release-notes/vX.Y.Z.md` ให้เอง
+> (ไม่ติ๊ก "ปล่อยให้ลูกค้าทันที" = ได้ Draft ไว้ตรวจก่อน แล้วค่อยกด Publish)
+>
+> วิธีด้านล่าง (`npm run release` บนเครื่องตัวเอง) ยังใช้ได้เหมือนเดิม
+
 ระบบอัปเดตอัตโนมัติของแอปใช้ **electron-updater** ดึงไฟล์จาก **GitHub Releases**
 ของ repo `lottelotte2000/Pos` (เป็น public จึงไม่ต้องใช้ token ในฝั่งแอปลูกค้า)
 
