@@ -121,7 +121,9 @@ const IdleScreen: React.FC = () => {
 };
 
 /* Active Cart */
-const ActiveCartScreen: React.FC<{ items: CartItem[]; total: number }> = ({ items, total }) => {
+type QrPaymentData = { url: string; amount: number; name: string };
+
+const ActiveCartScreen: React.FC<{ items: CartItem[]; total: number; qrData?: QrPaymentData }> = ({ items, total, qrData }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const p = usePal();
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);
@@ -135,7 +137,7 @@ const ActiveCartScreen: React.FC<{ items: CartItem[]; total: number }> = ({ item
 
       {/* ── Item list ── */}
       <div
-        className="flex-1 flex flex-col overflow-hidden"
+        className="flex-1 min-w-0 flex flex-col overflow-hidden"
         style={{ background: p.panel, borderRadius: 24, border: `1px solid ${p.panelBorder}`, backdropFilter: 'blur(12px)' }}
       >
         {/* Column header */}
@@ -191,30 +193,36 @@ const ActiveCartScreen: React.FC<{ items: CartItem[]; total: number }> = ({ item
       </div>
 
       {/* ── Right panel ── */}
-      <div className="w-72 flex-shrink-0 flex flex-col gap-4">
+      <div className="w-72 flex-shrink-0 flex flex-col gap-4 min-h-0 overflow-y-auto">
 
         {/* Item count */}
-        <div className="flex-shrink-0 p-6 rounded-2xl text-center" style={{ background: p.panel, border: `1px solid ${p.panelBorder}` }}>
+        {qrData ? (
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 rounded-2xl" style={{ background: p.panel, border: `1px solid ${p.panelBorder}` }}>
+            <span style={{ color: p.muted }}>จำนวนสินค้า</span>
+            <span className="text-xl font-bold" style={{ color: p.ink }}>{totalQty} ชิ้น</span>
+          </div>
+        ) : <div className="flex-shrink-0 p-6 rounded-2xl text-center" style={{ background: p.panel, border: `1px solid ${p.panelBorder}` }}>
           <p className="text-lg mb-1" style={{ color: p.muted }}>จำนวน</p>
           <p className="font-black" style={{ color: p.ink, fontSize: '4rem', lineHeight: 1 }}>{totalQty}</p>
           <p className="text-base mt-1" style={{ color: p.faint }}>ชิ้น</p>
-        </div>
+        </div>}
 
         {/* Total — ใช้สีธีมหลัก (var --color-primary) โซลิด ตัวเลขขาว ให้ลูกค้าเห็นชัดที่สุด และสีตรงกับหน้าหลัก */}
         <div
-          className="flex-1 rounded-2xl flex flex-col items-center justify-center text-center p-8"
+          className={`${qrData ? 'flex-shrink-0 p-4' : 'flex-1 p-8'} rounded-2xl flex flex-col items-center justify-center text-center`}
           style={{
             background: 'var(--color-primary-600)',
             border: '2px solid var(--color-primary-300)',
             boxShadow: '0 12px 45px -6px var(--color-primary-500)',
           }}
         >
-          <p className="text-2xl font-semibold mb-3 text-white" style={{ opacity: 0.92 }}>ยอดรวม</p>
-          <p className="font-black leading-none text-white" style={{ fontSize: '4.75rem', textShadow: '0 3px 24px rgba(0,0,0,0.45)' }}>
+          <p className={`${qrData ? 'text-lg mb-2' : 'text-2xl mb-3'} font-semibold text-white`} style={{ opacity: 0.92 }}>ยอดรวม</p>
+          <p className="font-black leading-none text-white max-w-full break-all" style={{ fontSize: qrData ? '2.5rem' : '4.75rem', textShadow: '0 3px 24px rgba(0,0,0,0.45)' }}>
             ฿{total.toFixed(2)}
           </p>
-          <div className="w-16 h-1.5 rounded-full mt-5 bg-white/60" />
+          {!qrData && <div className="w-16 h-1.5 rounded-full mt-5 bg-white/60" />}
         </div>
+        {qrData && <QrPaymentCard url={qrData.url} name={qrData.name} />}
       </div>
     </div>
   );
@@ -314,39 +322,17 @@ const CompletedScreen: React.FC<{ tabData: CartTab }> = ({ tabData }) => {
   );
 };
 
-/* QR Payment */
-const QrScreen: React.FC<{ url: string; amount: number; name: string }> = ({ url, amount, name }) => {
+/* QR payment card in the cart sidebar */
+const QrPaymentCard: React.FC<Pick<QrPaymentData, 'url' | 'name'>> = ({ url, name }) => {
   const p = usePal();
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center animate-fade-in gap-8">
-
-      {/* QR card (always white for scan reliability) */}
-      <div className="relative p-6 rounded-3xl" style={{ background: '#fff', boxShadow: '0 0 80px rgba(59,130,246,0.25)' }}>
-        <div className="absolute inset-6 rounded-xl overflow-hidden pointer-events-none z-10">
-          <div
-            style={{
-              position: 'absolute', left: 0, right: 0, height: 3,
-              background: 'linear-gradient(to right, transparent, #3b82f6, transparent)',
-              animation: 'qrScan 2.5s ease-in-out infinite',
-            }}
-          />
-        </div>
-        <img src={url} alt="PromptPay QR" className="w-72 h-72 object-contain relative z-0" style={{ mixBlendMode: 'multiply' }} />
+    <div className="flex-shrink-0 flex flex-col items-center text-center rounded-2xl p-4 animate-fade-in gap-3"
+      style={{ background: p.panel, border: `1px solid ${p.panelBorder}` }}>
+      <p className="text-lg font-semibold" style={{ color: p.ink }}>สแกน QR เพื่อชำระเงิน</p>
+      <div className="bg-white rounded-xl p-3">
+        <img src={url} alt="PromptPay QR สำหรับชำระเงิน" className="w-52 h-52 object-contain" />
       </div>
-
-      {/* Account name */}
-      <div>
-        <p className="text-3xl font-bold mb-1" style={{ color: p.ink }}>{name}</p>
-        <p className="text-xl font-medium tracking-wide" style={{ color: '#3b82f6' }}>สแกน QR เพื่อชำระเงิน</p>
-      </div>
-
-      {/* Amount */}
-      <div className="px-14 py-6 rounded-2xl" style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)' }}>
-        <p className="text-lg mb-1 font-medium" style={{ color: p.muted }}>ยอดชำระ</p>
-        <p className="font-black" style={{ color: p.ink, fontSize: '5rem', lineHeight: 1, textShadow: '0 0 40px rgba(59,130,246,0.3)' }}>
-          ฿{amount.toFixed(2)}
-        </p>
-      </div>
+      <p className="text-lg font-bold break-words w-full" style={{ color: p.ink }}>{name}</p>
     </div>
   );
 };
@@ -359,7 +345,7 @@ const CustomerDisplayPage: React.FC = () => {
   const p = usePal();
   const activeTab = getActiveTabData();
 
-  const [qrData, setQrData] = useState<{ url: string; amount: number; name: string } | null>(null);
+  const [qrData, setQrData] = useState<QrPaymentData | null>(null);
 
   useEffect(() => {
     const load = () => {
@@ -389,7 +375,7 @@ const CustomerDisplayPage: React.FC = () => {
   }, []);
 
   const renderContent = () => {
-    if (qrData) return <QrScreen url={qrData.url} amount={qrData.amount} name={qrData.name} />;
+    if (qrData) return <ActiveCartScreen items={activeTab?.items ?? []} total={qrData.amount} qrData={qrData} />;
     if (!activeTab || activeTab.items.length === 0) return <IdleScreen />;
     if (activeTab.status === 'confirming_payment') return <ConfirmingPaymentScreen tabData={activeTab} />;
     if (activeTab.status === 'completed') return <CompletedScreen tabData={activeTab} />;
@@ -437,15 +423,6 @@ const CustomerDisplayPage: React.FC = () => {
         {renderContent()}
       </main>
 
-      {/* Inline keyframe for QR scan animation */}
-      <style>{`
-        @keyframes qrScan {
-          0%   { top: 0; opacity: 0; }
-          10%  { opacity: 1; }
-          90%  { opacity: 1; }
-          100% { top: calc(100% - 3px); opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 };
