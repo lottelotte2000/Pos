@@ -1,3 +1,4 @@
+import { formatMoney } from '../utils/formatMoney';
 import React, { useEffect, useRef, useState } from 'react';
 import { ShoppingCart, CheckCircle, Gift, Banknote, Smartphone, CreditCard, Wifi } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -179,21 +180,21 @@ const ActiveCartScreen: React.FC<{ items: CartItem[]; total: number; qrData?: Qr
               <div className="min-w-0">
                 <p className="text-2xl font-semibold truncate" style={{ color: p.ink }}>{item.name}</p>
                 <p className="text-base mt-0.5" style={{ color: '#6366f1' }}>
-                  {item.quantity} × ฿{item.price.toFixed(2)}
+                  {item.quantity} × ฿{formatMoney(item.price)}
                 </p>
               </div>
 
               {/* Subtotal */}
               <p className="text-3xl font-bold whitespace-nowrap" style={{ color: p.ink }}>
-                ฿{(item.price * item.quantity).toFixed(2)}
+                ฿{formatMoney(item.price * item.quantity)}
               </p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Right panel ── */}
-      <div className="w-72 flex-shrink-0 flex flex-col gap-4 min-h-0 overflow-y-auto">
+      {/* ── Summary: left while showing PromptPay QR, right during normal sales ── */}
+      <div className={`${qrData ? 'order-first' : ''} w-72 flex-shrink-0 flex flex-col gap-4 min-h-0 overflow-y-auto`}>
 
         {/* Item count */}
         {qrData ? (
@@ -218,7 +219,7 @@ const ActiveCartScreen: React.FC<{ items: CartItem[]; total: number; qrData?: Qr
         >
           <p className={`${qrData ? 'text-lg mb-2' : 'text-2xl mb-3'} font-semibold text-white`} style={{ opacity: 0.92 }}>ยอดรวม</p>
           <p className="font-black leading-none text-white max-w-full break-all" style={{ fontSize: qrData ? '2.5rem' : '4.75rem', textShadow: '0 3px 24px rgba(0,0,0,0.45)' }}>
-            ฿{total.toFixed(2)}
+            ฿{formatMoney(total)}
           </p>
           {!qrData && <div className="w-16 h-1.5 rounded-full mt-5 bg-white/60" />}
         </div>
@@ -246,19 +247,19 @@ const ConfirmingPaymentScreen: React.FC<{ tabData: CartTab }> = ({ tabData }) =>
 
       <p className="text-2xl font-medium mb-3" style={{ color: p.muted }}>ยอดที่ต้องชำระ</p>
       <p className="font-black mb-10" style={{ color: p.ink, fontSize: '8rem', lineHeight: 1, textShadow: '0 0 60px rgba(59,130,246,0.25)' }}>
-        ฿{tabData.total.toFixed(2)}
+        ฿{formatMoney(tabData.total)}
       </p>
 
       {tabData.paymentMethod === 'cash' && tabData.cashReceived != null && (
         <div className="w-full max-w-md space-y-3">
           <div className="flex justify-between items-center px-6 py-4 rounded-2xl" style={{ background: p.row, border: `1px solid ${p.panelBorder}` }}>
             <span className="text-xl" style={{ color: p.muted }}>รับเงินสด</span>
-            <span className="text-2xl font-bold" style={{ color: p.ink }}>฿{tabData.cashReceived.toFixed(2)}</span>
+            <span className="text-2xl font-bold" style={{ color: p.ink }}>฿{formatMoney(tabData.cashReceived)}</span>
           </div>
           <div className="flex justify-between items-center px-6 py-5 rounded-2xl" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}>
             <span className="text-xl" style={{ color: p.sub }}>เงินทอน</span>
             <span className="font-black text-emerald-500" style={{ fontSize: '3rem', lineHeight: 1 }}>
-              ฿{tabData.changeAmount?.toFixed(2) ?? '0.00'}
+              ฿{formatMoney(tabData.changeAmount)}
             </span>
           </div>
         </div>
@@ -299,20 +300,20 @@ const CompletedScreen: React.FC<{ tabData: CartTab }> = ({ tabData }) => {
       <div className="w-full max-w-md space-y-3">
         <div className="flex justify-between items-center px-6 py-4 rounded-2xl" style={{ background: p.row, border: `1px solid ${p.panelBorder}` }}>
           <span className="text-xl" style={{ color: p.muted }}>ยอดรวมสุทธิ</span>
-          <span className="text-3xl font-bold" style={{ color: '#10b981' }}>฿{tabData.total.toFixed(2)}</span>
+          <span className="text-3xl font-bold" style={{ color: '#10b981' }}>฿{formatMoney(tabData.total)}</span>
         </div>
         {tabData.paymentMethod === 'cash' && (
           <>
             <div className="flex justify-between items-center px-6 py-4 rounded-2xl" style={{ background: p.row, border: `1px solid ${p.rowBorder}` }}>
               <span className="text-xl" style={{ color: p.muted }}>รับเงินสด</span>
               <span className="text-2xl font-semibold" style={{ color: p.ink }}>
-                ฿{tabData.cashReceived?.toFixed(2) ?? '0.00'}
+                ฿{formatMoney(tabData.cashReceived)}
               </span>
             </div>
             <div className="flex justify-between items-center px-6 py-6 rounded-2xl" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}>
               <span className="text-2xl font-semibold" style={{ color: p.sub }}>เงินทอน</span>
               <span className="font-black text-emerald-500" style={{ fontSize: '3.5rem', lineHeight: 1 }}>
-                ฿{tabData.changeAmount?.toFixed(2) ?? '0.00'}
+                ฿{formatMoney(tabData.changeAmount)}
               </span>
             </div>
           </>

@@ -5,6 +5,7 @@ import { Calendar, Eye, FileText, Download, Filter, SortAsc, SortDesc, Loader2, 
 import Receipt from '../components/sales/Receipt';
 import { Transaction } from '../types';
 import * as XLSX from 'xlsx';
+import { formatMoney } from '../utils/formatMoney';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -147,13 +148,18 @@ const TransactionsPage: React.FC = () => {
         'แคชเชียร์': t.cashierName,
         'วิธีชำระเงิน': t.paymentMethod,
         'จำนวนรายการ': t.items.length,
-        'ยอดรวม': (t.totalAmount || 0).toFixed(2),
-        'ต้นทุนรายการ': transactionCost.toFixed(2),
-        'กำไรรายการ': transactionProfit.toFixed(2),
+        'ยอดรวม': t.totalAmount || 0,
+        'ต้นทุนรายการ': transactionCost,
+        'กำไรรายการ': transactionProfit,
       };
     });
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.json_to_sheet(dataForExport);
+    dataForExport.forEach((_, index) => {
+      ['F', 'G', 'H'].forEach(column => {
+        worksheet[`${column}${index + 2}`].z = '#,##0';
+      });
+    });
     XLSX.utils.book_append_sheet(workbook, worksheet, 'ประวัติการขาย');
     const dateString = new Date().toISOString().split('T')[0];
     const filename = `ประวัติการขาย_${dateString}.xlsx`;
@@ -279,15 +285,15 @@ const TransactionsPage: React.FC = () => {
           </div>
           <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
             <p className="text-slate-400 text-sm mb-1">ยอดขายรวม</p>
-            <h3 className="text-2xl font-bold text-primary-400">{summaryStats.totalFilteredRevenue.toFixed(2)} ฿</h3>
+            <h3 className="text-2xl font-bold text-primary-400">{formatMoney(summaryStats.totalFilteredRevenue)} ฿</h3>
           </div>
           <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
             <p className="text-slate-400 text-sm mb-1">ต้นทุนรวม</p>
-            <h3 className="text-2xl font-bold text-rose-400">{summaryStats.totalFilteredCost.toFixed(2)} ฿</h3>
+            <h3 className="text-2xl font-bold text-rose-400">{formatMoney(summaryStats.totalFilteredCost)} ฿</h3>
           </div>
           <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
             <p className="text-emerald-400/80 text-sm mb-1">กำไรรวม</p>
-            <h3 className="text-2xl font-bold text-emerald-400">{summaryStats.totalFilteredProfit.toFixed(2)} ฿</h3>
+            <h3 className="text-2xl font-bold text-emerald-400">{formatMoney(summaryStats.totalFilteredProfit)} ฿</h3>
           </div>
         </div>
       </div>
@@ -355,7 +361,7 @@ const TransactionsPage: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{transaction.items.length}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-white">{transaction.totalAmount.toFixed(2)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-white">{formatMoney(transaction.totalAmount)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                           <div className="inline-flex items-center gap-2">
                             <button onClick={() => viewReceipt(transaction)} className="btn btn-secondary !px-3 !py-1.5 text-xs inline-flex text-primary-300 hover:text-primary-200">
@@ -415,7 +421,7 @@ const TransactionsPage: React.FC = () => {
             </div>
             <h3 className="text-xl font-bold text-white">ยืนยันการยกเลิกบิล</h3>
             <p className="my-3 text-sm text-slate-400 leading-relaxed">
-              ยกเลิกบิล <span className="font-semibold text-white">#{txToVoid.id}</span> ยอด <span className="font-semibold text-white">{txToVoid.totalAmount.toFixed(2)} ฿</span>?<br />
+              ยกเลิกบิล <span className="font-semibold text-white">#{txToVoid.id}</span> ยอด <span className="font-semibold text-white">{formatMoney(txToVoid.totalAmount)} ฿</span>?<br />
               ระบบจะคืนสต็อกสินค้าในบิลนี้ และตัดออกจากยอดขาย/รายงาน
             </p>
             <div className="mt-6 flex justify-center gap-3">

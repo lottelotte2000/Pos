@@ -11,6 +11,7 @@ import { DragonBallPowerUp } from '../components/common/DragonBallEffects';
 import QuantityModal from '../components/sales/QuantityModal';
 import { Product, CartItem } from '../types';
 import { translateThaiBarcode } from '../utils/thaiBarcode';
+import { formatMoney } from '../utils/formatMoney';
 import { Search, ShoppingCart, PlusCircle, X, MonitorPlay, MonitorOff, CheckCircle, Clock, Printer, Package, Smartphone } from 'lucide-react';
 
 const SalesPage: React.FC = () => {
@@ -182,14 +183,14 @@ const SalesPage: React.FC = () => {
         addCustomItemToActiveTab({
             id: `topup-${Date.now()}`,
             barcode: `TOPUP-${provider}-${phoneNumber || 'nophone'}-${Date.now()}`,
-            name: `เติมเงิน ${provider} ${cost}฿${phoneNumber ? ` - ${phoneNumber}` : ''}`,
+            name: `เติมเงิน ${provider} ${formatMoney(cost)}฿${phoneNumber ? ` - ${phoneNumber}` : ''}`,
             price,
             quantity: 1,
             stock: 9999,
             cost
         });
         setShowTopUpModal(false);
-        showNotification(`เพิ่มรายการเติมเงิน ${provider} ${cost} บาท (รับเงิน ${price} บาท)`, 'success');
+        showNotification(`เพิ่มรายการเติมเงิน ${provider} ${formatMoney(cost)} บาท (รับเงิน ${formatMoney(price)} บาท)`, 'success');
     };
 
     // โฟกัสช่องสแกนอัตโนมัติ — สลับแท็บ, เปิดบิลใหม่หลังจบการขาย (status กลับเป็น active), และเมื่อปิด modal
@@ -333,10 +334,10 @@ const SalesPage: React.FC = () => {
         const printWindow = window.open('', '_blank');
         if (!printWindow) return;
         const rows = activeTabData.items
-            .map(i => '<tr><td>' + i.name + '</td><td style="text-align:center">' + i.quantity + '</td><td style="text-align:right">' + (i.price * i.quantity).toFixed(2) + '</td></tr>')
+            .map(i => '<tr><td>' + i.name + '</td><td style="text-align:center">' + i.quantity + '</td><td style="text-align:right">' + formatMoney(i.price * i.quantity) + '</td></tr>')
             .join('');
         const cashSection = activeTabData.paymentMethod === 'cash'
-            ? '<div style="display:flex;justify-content:space-between"><span>รับมา</span><span>' + (activeTabData.cashReceived ?? 0).toFixed(2) + '</span></div><div style="display:flex;justify-content:space-between"><b><span>เงินทอน</span><span>' + (activeTabData.changeAmount ?? 0).toFixed(2) + '</span></b></div>'
+            ? '<div style="display:flex;justify-content:space-between"><span>รับมา</span><span>' + formatMoney(activeTabData.cashReceived) + '</span></div><div style="display:flex;justify-content:space-between"><b><span>เงินทอน</span><span>' + formatMoney(activeTabData.changeAmount) + '</span></b></div>'
             : '';
         const html = '<html><head><title>ใบเสร็จ</title>'
             + '<style>body{font-family:sans-serif;font-size:10pt;width:72mm;margin:0 auto}'
@@ -347,7 +348,7 @@ const SalesPage: React.FC = () => {
             + '<p style="margin:2px 0">' + new Date().toLocaleString('th-TH') + '</p></div>'
             + '<hr/><table><tr><th style="text-align:left">รายการ</th><th>จำนวน</th><th style="text-align:right">รวม</th></tr>'
             + rows + '</table><hr/>'
-            + '<div style="display:flex;justify-content:space-between"><span>รวม</span><b><span>' + activeTabData.total.toFixed(2) + ' บาท</span></b></div>'
+            + '<div style="display:flex;justify-content:space-between"><span>รวม</span><b><span>' + formatMoney(activeTabData.total) + ' บาท</span></b></div>'
             + cashSection
             + '</body></html>';
         printWindow.document.write(html);
@@ -475,7 +476,7 @@ const SalesPage: React.FC = () => {
                                             <Package size={28} className="text-primary-500" />
                                         </div>
                                         <p className="font-medium text-slate-200 text-sm text-center line-clamp-2 leading-tight">{product.name}</p>
-                                        <p className="text-primary-500 font-bold text-center">฿{product.price.toFixed(2)}</p>
+                                        <p className="text-primary-500 font-bold text-center">฿{formatMoney(product.price)}</p>
                                         <p className="text-[11px] text-slate-600 text-center">คงเหลือ {product.stock}</p>
                                     </div>
                                 ))}
@@ -537,12 +538,12 @@ const SalesPage: React.FC = () => {
                             <div className="space-y-1.5">
                                 <div className="flex justify-between text-slate-500 text-sm">
                                     <span>รวม</span>
-                                    <span>{activeTabData.total.toFixed(2)} บาท</span>
+                                    <span>{formatMoney(activeTabData.total)} บาท</span>
                                 </div>
                                 <div className="flex justify-between text-slate-100 text-xl font-bold pt-1.5"
                                     style={{ borderTop: '1px solid var(--color-border)' }}>
                                     <span>สุทธิ</span>
-                                    <span className="text-primary-500">฿{activeTabData.total.toFixed(2)}</span>
+                                    <span className="text-primary-500">฿{formatMoney(activeTabData.total)}</span>
                                 </div>
                             </div>
 
@@ -578,17 +579,17 @@ const SalesPage: React.FC = () => {
                         <h2 className="text-2xl font-bold text-white mb-1">ทำรายการสำเร็จ!</h2>
                         <div className="flex justify-between items-center text-slate-500 text-sm mt-4">
                             <span>ยอดชำระ</span>
-                            <span className="text-slate-300">{activeTabData.total.toFixed(2)} บาท</span>
+                            <span className="text-slate-300">{formatMoney(activeTabData.total)} บาท</span>
                         </div>
                         <div className="flex justify-between items-center text-slate-500 text-sm mt-1.5">
                             <span>รับมา</span>
-                            <span className="text-slate-300">{activeTabData.cashReceived?.toFixed(2) ?? '0.00'} บาท</span>
+                            <span className="text-slate-300">{formatMoney(activeTabData.cashReceived)} บาท</span>
                         </div>
 
                         <div className="mt-5 mb-6 py-6 rounded-xl" style={{ backgroundColor: 'var(--color-bg-base)' }}>
                             <p className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-1">เงินทอน</p>
                             <p className="text-5xl font-black text-emerald-400 leading-none">
-                                {activeTabData.changeAmount?.toFixed(2) ?? '0.00'}
+                                {formatMoney(activeTabData.changeAmount)}
                             </p>
                             <p className="text-slate-600 text-sm mt-1">บาท</p>
                         </div>
@@ -627,7 +628,7 @@ const SalesPage: React.FC = () => {
 
                         <div className="flex justify-between items-center text-slate-500 text-sm mt-4">
                             <span>ยอดชำระ</span>
-                            <span className="text-slate-300">{activeTabData.total.toFixed(2)} บาท</span>
+                            <span className="text-slate-300">{formatMoney(activeTabData.total)} บาท</span>
                         </div>
 
                         {activeTabData.paymentMethod === 'cash' && (
@@ -635,13 +636,13 @@ const SalesPage: React.FC = () => {
                                 <div className="flex justify-between items-center text-slate-500 text-sm mt-1.5">
                                     <span>รับมา</span>
                                     <span className="text-slate-300">
-                                        {activeTabData.cashReceived?.toFixed(2) ?? '0.00'} บาท
+                                        {formatMoney(activeTabData.cashReceived)} บาท
                                     </span>
                                 </div>
                                 <div className="mt-5 mb-4 py-6 rounded-xl" style={{ backgroundColor: 'var(--color-bg-base)' }}>
                                     <p className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-1">เงินทอน</p>
                                     <p className="text-5xl font-black text-emerald-400 leading-none">
-                                        {activeTabData.changeAmount?.toFixed(2) ?? '0.00'}
+                                        {formatMoney(activeTabData.changeAmount)}
                                     </p>
                                     <p className="text-slate-600 text-sm mt-1">บาท</p>
                                 </div>

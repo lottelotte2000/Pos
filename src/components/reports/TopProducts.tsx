@@ -1,5 +1,6 @@
 import React from 'react';
 import { Transaction } from '../../types';
+import { formatMoney } from '../../utils/formatMoney';
 
 interface TopProductsProps {
   transactions: Transaction[];
@@ -68,7 +69,7 @@ const TopProducts: React.FC<TopProductsProps> = ({ transactions, limit = 10 }) =
               </div>
               <div className="text-right">
                 <span className="font-semibold">{product.quantity} ชิ้น</span>
-                <span className="text-sm text-gray-500 ml-2">({product.sales.toFixed(2)} บาท)</span>
+                <span className="text-sm text-gray-500 ml-2">({formatMoney(product.sales)} บาท)</span>
               </div>
             </div>
             

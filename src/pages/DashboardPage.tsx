@@ -1,3 +1,4 @@
+import { formatMoney } from '../utils/formatMoney';
 import React, { useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { useProducts } from '../context/ProductContext';
@@ -78,7 +79,7 @@ const DashboardPage: React.FC = () => {
             </div>
             <div>
               <p className="text-sm font-medium text-slate-400">ยอดขายวันนี้</p>
-              <h3 className="text-2xl font-bold text-white">{stats.totalSalesToday.toLocaleString()} ฿</h3>
+              <h3 className="text-2xl font-bold text-white">{formatMoney(stats.totalSalesToday)} ฿</h3>
             </div>
           </div>
         </div>
@@ -90,7 +91,7 @@ const DashboardPage: React.FC = () => {
             </div>
             <div>
               <p className="text-sm font-medium text-slate-400">กำไรวันนี้ (ประมาณ)</p>
-              <h3 className="text-2xl font-bold text-white">{stats.totalProfitToday.toLocaleString()} ฿</h3>
+              <h3 className="text-2xl font-bold text-white">{formatMoney(stats.totalProfitToday)} ฿</h3>
             </div>
           </div>
         </div>

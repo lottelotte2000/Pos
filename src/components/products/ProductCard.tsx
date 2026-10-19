@@ -1,3 +1,4 @@
+import { formatMoney } from '../../utils/formatMoney';
 import React from 'react';
 import { Product } from '../../types';
 import { Edit, Trash2, Package } from 'lucide-react';
@@ -26,7 +27,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
         <h3 className="font-semibold text-slate-200 truncate text-sm">{product.name}</h3>
         {product.barcode && <p className="text-[11px] text-slate-600 font-mono mt-0.5">{product.barcode}</p>}
         <div className="flex justify-between items-center mt-3">
-          <p className="text-base font-bold text-primary-400">฿{product.price.toFixed(2)}</p>
+          <p className="text-base font-bold text-primary-400">฿{formatMoney(product.price)}</p>
           <p className={`text-xs font-semibold ${stockColor}`}>{product.stock} ชิ้น</p>
         </div>
       </div>

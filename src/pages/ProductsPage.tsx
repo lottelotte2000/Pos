@@ -1,3 +1,4 @@
+import { formatMoney } from '../utils/formatMoney';
 import React, { useState, useMemo, useRef } from 'react';
 import { useProducts } from '../context/ProductContext';
 import { Product } from '../types';
@@ -452,7 +453,7 @@ const ProductsPage: React.FC = () => {
                                                 : <span className="text-slate-600 text-xs">-</span>
                                             }
                                         </td>
-                                        <td className="p-4 text-right font-bold text-emerald-400 text-base">{product.price.toFixed(2)}</td>
+                                        <td className="p-4 text-right font-bold text-emerald-400 text-base">{formatMoney(product.price)}</td>
                                         <td className="p-4 text-center">
                                             <span className={`px-3 py-1 rounded-full text-xs font-bold border ${product.stock <= 5 ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-slate-700/50 text-slate-300 border-transparent'}`}>
                                                 {product.stock}

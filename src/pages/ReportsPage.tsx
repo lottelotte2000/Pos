@@ -7,6 +7,7 @@ import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { Calendar, Download, FileText, Star, TrendingUp } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { formatMoney } from '../utils/formatMoney';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
@@ -92,17 +93,30 @@ const ReportsPage: React.FC = () => {
             ["รายงานยอดขายสรุป"],
             ["ช่วงวันที่:", `${format(dateRange?.from || new Date(), 'dd/MM/yyyy')} - ${format(dateRange?.to || new Date(), 'dd/MM/yyyy')}`], [],
             ['หัวข้อ', 'ค่า'],
-            ['ยอดขายรวม (บาท)', summary.totalRevenue.toFixed(2)],
-            ['กำไรรวม (บาท)', summary.totalProfit.toFixed(2)],
+            ['ยอดขายรวม (บาท)', summary.totalRevenue],
+            ['กำไรรวม (บาท)', summary.totalProfit],
             ['จำนวนบิลทั้งหมด', summary.transactionCount],
         ];
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), "สรุปยอดขาย");
+        const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+        summarySheet.B5.z = '#,##0';
+        summarySheet.B6.z = '#,##0';
+        XLSX.utils.book_append_sheet(wb, summarySheet, "สรุปยอดขาย");
 
-        const topProductsData = topProducts.map((p, i) => ({ '#': i + 1, 'สินค้าขายดี': p.name, 'จำนวน': p.quantitySold, 'ยอดขาย': p.totalRevenue.toFixed(2) }));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(topProductsData), "สินค้าขายดี");
+        const topProductsData = topProducts.map((p, i) => ({ '#': i + 1, 'สินค้าขายดี': p.name, 'จำนวน': p.quantitySold, 'ยอดขาย': p.totalRevenue }));
+        const topProductsSheet = XLSX.utils.json_to_sheet(topProductsData);
+        topProductsData.forEach((_, index) => {
+            topProductsSheet[`D${index + 2}`].z = '#,##0';
+        });
+        XLSX.utils.book_append_sheet(wb, topProductsSheet, "สินค้าขายดี");
 
-        const detailedSalesData = detailedSaleItems.map(item => ({ 'วันที่': item.date, 'ชื่อสินค้า': item.name, 'จำนวน': item.quantity, 'ทุน/หน่วย': item.cost.toFixed(2), 'ขาย/หน่วย': item.price.toFixed(2), 'กำไรรวม': item.totalProfit.toFixed(2) }));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailedSalesData), "การขายแบบละเอียด");
+        const detailedSalesData = detailedSaleItems.map(item => ({ 'วันที่': item.date, 'ชื่อสินค้า': item.name, 'จำนวน': item.quantity, 'ทุน/หน่วย': item.cost, 'ขาย/หน่วย': item.price, 'กำไรรวม': item.totalProfit }));
+        const detailedSalesSheet = XLSX.utils.json_to_sheet(detailedSalesData);
+        detailedSalesData.forEach((_, index) => {
+            ['D', 'E', 'F'].forEach(column => {
+                detailedSalesSheet[`${column}${index + 2}`].z = '#,##0';
+            });
+        });
+        XLSX.utils.book_append_sheet(wb, detailedSalesSheet, "การขายแบบละเอียด");
 
         XLSX.writeFile(wb, `Report_Excel_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     };
@@ -136,8 +150,8 @@ const ReportsPage: React.FC = () => {
 
                     <h2>สรุปยอดขาย</h2>
                     <table>
-                        <tr><th>ยอดขายรวม</th><td>${summary.totalRevenue.toFixed(2)} บาท</td></tr>
-                        <tr><th>กำไรรวม</th><td>${summary.totalProfit.toFixed(2)} บาท</td></tr>
+                        <tr><th>ยอดขายรวม</th><td>${formatMoney(summary.totalRevenue)} บาท</td></tr>
+                        <tr><th>กำไรรวม</th><td>${formatMoney(summary.totalProfit)} บาท</td></tr>
                         <tr><th>จำนวนบิล</th><td>${summary.transactionCount}</td></tr>
                     </table>
 
@@ -145,7 +159,7 @@ const ReportsPage: React.FC = () => {
                     <table>
                         <thead><tr><th>#</th><th>ชื่อสินค้า</th><th>จำนวน (ชิ้น)</th><th>ยอดขาย (บาท)</th></tr></thead>
                         <tbody>
-                            ${topProducts.map((p, i) => `<tr><td>${i + 1}</td><td>${p.name}</td><td>${p.quantitySold}</td><td>${p.totalRevenue.toFixed(2)}</td></tr>`).join('')}
+                            ${topProducts.map((p, i) => `<tr><td>${i + 1}</td><td>${p.name}</td><td>${p.quantitySold}</td><td>${formatMoney(p.totalRevenue)}</td></tr>`).join('')}
                         </tbody>
                     </table>
                     
@@ -153,7 +167,7 @@ const ReportsPage: React.FC = () => {
                     <table>
                          <thead><tr><th>วันที่</th><th>ชื่อสินค้า</th><th>จำนวน</th><th>ทุน/หน่วย</th><th>ขาย/หน่วย</th><th>กำไรรวม</th></tr></thead>
                          <tbody>
-                            ${detailedSaleItems.map(item => `<tr><td>${item.date}</td><td>${item.name}</td><td>${item.quantity}</td><td>${item.cost.toFixed(2)}</td><td>${item.price.toFixed(2)}</td><td>${item.totalProfit.toFixed(2)}</td></tr>`).join('')}
+                            ${detailedSaleItems.map(item => `<tr><td>${item.date}</td><td>${item.name}</td><td>${item.quantity}</td><td>${formatMoney(item.cost)}</td><td>${formatMoney(item.price)}</td><td>${formatMoney(item.totalProfit)}</td></tr>`).join('')}
                          </tbody>
                     </table>
                 </body>
@@ -238,12 +252,12 @@ const ReportsPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div className="card p-6 flex flex-col bg-gradient-to-br from-white/10 to-white/5 border-white/10">
                         <h4 className="text-sm font-medium text-slate-400 mb-1">ยอดขายรวม</h4>
-                        <p className="text-3xl font-bold text-white tracking-tight">{summary.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-bold text-white tracking-tight">{formatMoney(summary.totalRevenue)}</p>
                         <span className="text-xs text-primary-300 mt-2 bg-primary-500/10 w-fit px-2 py-1 rounded-md">บาท</span>
                     </div>
                     <div className="card p-6 flex flex-col bg-gradient-to-br from-white/10 to-white/5 border-white/10">
                         <h4 className="text-sm font-medium text-slate-400 mb-1">กำไรรวม</h4>
-                        <p className="text-3xl font-bold text-emerald-400 tracking-tight">{summary.totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-bold text-emerald-400 tracking-tight">{formatMoney(summary.totalProfit)}</p>
                         <span className="text-xs text-emerald-300 mt-2 bg-emerald-500/10 w-fit px-2 py-1 rounded-md">บาท</span>
                     </div>
                     <div className="card p-6 flex flex-col bg-gradient-to-br from-white/10 to-white/5 border-white/10">
@@ -258,7 +272,7 @@ const ReportsPage: React.FC = () => {
                     </div>
                     <div className="card p-6 flex flex-col bg-gradient-to-br from-white/10 to-white/5 border-white/10">
                         <h4 className="text-sm font-medium text-slate-400 mb-1">ยอดเฉลี่ย/บิล</h4>
-                        <p className="text-3xl font-bold text-amber-400 tracking-tight">{summary.averageSale.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        <p className="text-3xl font-bold text-amber-400 tracking-tight">{formatMoney(summary.averageSale)}</p>
                         <span className="text-xs text-amber-300 mt-2 bg-amber-500/10 w-fit px-2 py-1 rounded-md">บาท/บิล</span>
                     </div>
                 </div>
@@ -289,7 +303,7 @@ const ReportsPage: React.FC = () => {
                                         <td className="px-4 py-3 text-slate-500">{index + 1}</td>
                                         <td className="px-4 py-3 font-medium text-white">{p.name}</td>
                                         <td className="px-4 py-3 text-center font-bold text-primary-300">{p.quantitySold}</td>
-                                        <td className="px-4 py-3 text-right text-slate-300">{p.totalRevenue.toLocaleString()}</td>
+                                        <td className="px-4 py-3 text-right text-slate-300">{formatMoney(p.totalRevenue)}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -323,9 +337,13 @@ const ReportsPage: React.FC = () => {
                                 options={{
                                     responsive: true,
                                     maintainAspectRatio: false,
-                                    plugins: { legend: { display: false }, title: { display: false } },
+                                    plugins: {
+                                        legend: { display: false },
+                                        title: { display: false },
+                                        tooltip: { callbacks: { label: context => `${context.dataset.label}: ฿${formatMoney(context.parsed.y)}` } },
+                                    },
                                     scales: {
-                                        y: { beginAtZero: true, ticks: { callback: (v: number | string) => '฿' + Number(v).toLocaleString() } },
+                                        y: { beginAtZero: true, ticks: { callback: (v: number | string) => '฿' + formatMoney(Number(v)) } },
                                         x: { grid: { display: false } },
                                     },
                                 }}
@@ -360,9 +378,9 @@ const ReportsPage: React.FC = () => {
                                     <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{item.date}</td>
                                     <td className="px-4 py-3 font-medium text-white">{item.name}</td>
                                     <td className="px-4 py-3 text-center text-slate-300">{item.quantity}</td>
-                                    <td className="px-4 py-3 text-right text-slate-400 font-mono">{item.cost.toFixed(2)}</td>
-                                    <td className="px-4 py-3 text-right text-slate-300 font-mono">{item.price.toFixed(2)}</td>
-                                    <td className="px-4 py-3 text-right font-bold text-emerald-400 font-mono">+{item.totalProfit.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-right text-slate-400 font-mono">{formatMoney(item.cost)}</td>
+                                    <td className="px-4 py-3 text-right text-slate-300 font-mono">{formatMoney(item.price)}</td>
+                                    <td className="px-4 py-3 text-right font-bold text-emerald-400 font-mono">+{formatMoney(item.totalProfit)}</td>
                                 </tr>
                             ))}
                         </tbody>

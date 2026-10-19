@@ -4,6 +4,7 @@ import QRCode from 'qrcode';
 import generatePayload from 'promptpay-qr';
 import { useSettings } from '../../context/SettingsContext';
 import { PromptPayAccount } from '../../types';
+import { formatMoney } from '../../utils/formatMoney';
 
 interface PaymentModalProps {
   total: number;
@@ -208,7 +209,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <DollarSign size={100} />
               </div>
               <span className="text-slate-300 block mb-2 font-medium">ยอดรวมที่ต้องชำระ</span>
-              <span className="text-5xl font-bold text-white tracking-tight">{total.toFixed(2)}</span>
+              <span className="text-5xl font-bold text-white tracking-tight">{formatMoney(total)}</span>
               <span className="text-primary-300 text-lg ml-2">฿</span>
             </div>
 
@@ -248,7 +249,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       id="cashReceived"
                       value={cashReceivedStr}
                       onChange={(e) => setCashReceivedStr(e.target.value)}
-                      placeholder="0.00"
+                      placeholder="0"
                       className="w-full bg-slate-800 border-2 border-slate-600 rounded-xl px-4 py-4 text-3xl font-bold text-white placeholder-slate-600 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20 transition-all text-right"
                     />
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl font-semibold">฿</span>
@@ -258,7 +259,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     <div className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col items-center animate-slide-up">
                       <span className="text-emerald-400 text-sm font-medium uppercase tracking-wide">เงินทอน</span>
                       <div className="text-4xl font-bold text-emerald-400 tracking-tight mt-1">
-                        {calculatedChange.toFixed(2)} <span className="text-lg">฿</span>
+                        {formatMoney(calculatedChange)} <span className="text-lg">฿</span>
                       </div>
                     </div>
                   )}
@@ -274,7 +275,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         {amount}
                       </button>
                     ))}
-                    <button onClick={() => setCashReceivedStr(total.toFixed(2))} className="py-2 rounded-lg bg-primary-500/20 hover:bg-primary-500/30 text-primary-300 text-xs font-medium transition-colors border border-primary-500/20">
+                    <button onClick={() => setCashReceivedStr(String(total))} className="py-2 rounded-lg bg-primary-500/20 hover:bg-primary-500/30 text-primary-300 text-xs font-medium transition-colors border border-primary-500/20">
                       พอดี
                     </button>
                   </div>
@@ -314,7 +315,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       <p className="text-sm text-primary-300 font-mono tracking-wider">
                         {activePromptPayAccount ? activePromptPayAccount.number : receiptSettings.promptPayId}
                       </p>
-                      <p className="text-xs text-slate-500 mt-4 max-w-[200px]">สแกนเพื่อชำระเงินยอด {total.toFixed(2)} บาท</p>
+                      <p className="text-xs text-slate-500 mt-4 max-w-[200px]">สแกนเพื่อชำระเงินยอด {formatMoney(total)} บาท</p>
                     </>
                   ) : (
                     <div className="py-8">

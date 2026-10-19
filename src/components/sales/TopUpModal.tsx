@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Smartphone, CheckCircle, Hash, Pencil, Plus, Trash2, Check } from 'lucide-react';
 import { TopUpPreset } from '../../types';
+import { formatMoney } from '../../utils/formatMoney';
 
 interface TopUpModalProps {
     onConfirm: (provider: string, phoneNumber: string, cost: number, profit: number) => void;
@@ -150,13 +151,13 @@ const TopUpModal: React.FC<TopUpModalProps> = ({ onConfirm, onCancel, amounts, o
                                                 setSelectedIndex(i);
                                                 setCustomAmount('');
                                             }}
-                                            title={preset.profit ? `กำไร ${preset.profit} ฿ (รับ ${preset.cost + preset.profit} ฿)` : undefined}
+                                            title={preset.profit ? `กำไร ${formatMoney(preset.profit)} ฿ (รับ ${formatMoney(preset.cost + preset.profit)} ฿)` : undefined}
                                             className={`py-2 rounded-lg border text-sm font-semibold transition-all duration-200 ${selectedIndex === i
                                                 ? 'bg-primary-600 text-white border-primary-500 shadow-lg shadow-primary-500/30'
                                                 : 'bg-white/5 text-slate-300 border-white/5 hover:bg-white/10'
                                                 }`}
                                         >
-                                            {preset.cost}
+                                            {formatMoney(preset.cost)}
                                         </button>
                                     ))}
                                 </div>
@@ -174,8 +175,8 @@ const TopUpModal: React.FC<TopUpModalProps> = ({ onConfirm, onCancel, amounts, o
                                 {/* สรุปยอดที่ต้องเก็บเมื่อเลือกปุ่มที่มีกำไร */}
                                 {selected && selected.profit > 0 && (
                                     <div className="mt-3 flex justify-between items-center text-sm rounded-lg bg-black/30 border border-white/10 px-4 py-2.5">
-                                        <span className="text-slate-400">ต้นทุน {selected.cost} + กำไร {selected.profit}</span>
-                                        <span className="font-bold text-primary-400">รับเงิน {total.toLocaleString()} ฿</span>
+                                        <span className="text-slate-400">ต้นทุน {formatMoney(selected.cost)} + กำไร {formatMoney(selected.profit)}</span>
+                                        <span className="font-bold text-primary-400">รับเงิน {formatMoney(total)} ฿</span>
                                     </div>
                                 )}
                             </>
@@ -254,7 +255,7 @@ const TopUpModal: React.FC<TopUpModalProps> = ({ onConfirm, onCancel, amounts, o
                             : 'bg-slate-700 text-slate-500 cursor-not-allowed'
                             }`}
                     >
-                        {isValid ? `ยืนยัน • รับเงิน ${total.toLocaleString()} ฿` : 'ยืนยันการเติมเงิน'}
+                        {isValid ? `ยืนยัน • รับเงิน ${formatMoney(total)} ฿` : 'ยืนยันการเติมเงิน'}
                     </button>
                 </div>
             </div>

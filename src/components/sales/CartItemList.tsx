@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CartItem as CartItemType } from '../../types';
 import { Trash2, PlusSquare, MinusSquare } from 'lucide-react';
+import { formatMoney } from '../../utils/formatMoney';
 
 interface CartItemListProps {
   items: CartItemType[];
@@ -78,7 +79,7 @@ const CartItemList: React.FC<CartItemListProps> = ({
           <div className="flex-grow min-w-0">
             <p className="text-slate-200 text-sm font-medium truncate">{item.name}</p>
             {item.barcode && <p className="text-slate-600 text-xs mt-0.5">{item.barcode}</p>}
-            <p className="text-slate-500 text-xs mt-0.5">฿{item.price.toFixed(2)} / ชิ้น</p>
+            <p className="text-slate-500 text-xs mt-0.5">฿{formatMoney(item.price)} / ชิ้น</p>
           </div>
 
           {/* Quantity controls */}
@@ -109,7 +110,7 @@ const CartItemList: React.FC<CartItemListProps> = ({
 
           {/* Total + Remove */}
           <div className="text-right flex-shrink-0 min-w-[70px]">
-            <p className="text-primary-400 font-bold text-sm">฿{(item.price * item.quantity).toFixed(2)}</p>
+            <p className="text-primary-400 font-bold text-sm">฿{formatMoney(item.price * item.quantity)}</p>
             <button onClick={() => onRequestRemoveItem(index)}
               className="text-slate-700 hover:text-red-400 transition-colors mt-0.5">
               <Trash2 size={13} />

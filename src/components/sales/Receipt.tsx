@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Transaction } from '../../types';
 import { Printer, X, Phone, Receipt as ReceiptIcon } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
+import { formatMoney } from '../../utils/formatMoney';
 
 interface ReceiptProps {
   transaction?: Transaction | null;
@@ -131,7 +132,7 @@ const Receipt: React.FC<ReceiptProps> = ({ transaction, onClose }) => {
             <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
               <div className="flex justify-between items-center">
                 <span className="text-emerald-400 font-medium">ยอดเงินรวมทั้งสิ้น</span>
-                <span className="text-2xl font-bold text-emerald-400">฿{(transaction.totalAmount || 0).toFixed(2)}</span>
+                <span className="text-2xl font-bold text-emerald-400">฿{formatMoney(transaction.totalAmount)}</span>
               </div>
             </div>
           </div>
@@ -199,7 +200,7 @@ const Receipt: React.FC<ReceiptProps> = ({ transaction, onClose }) => {
                       <tr key={idx}>
                         <td className="py-1 pr-1">{item.name}</td>
                         <td className="text-center align-top py-1">{item.quantity}</td>
-                        <td className="text-right align-top py-1">{(item.subtotal || item.price * item.quantity).toFixed(2)}</td>
+                        <td className="text-right align-top py-1">{formatMoney(item.subtotal || item.price * item.quantity)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -209,7 +210,7 @@ const Receipt: React.FC<ReceiptProps> = ({ transaction, onClose }) => {
                   {/* Subtotals if needed, keeping it simple for now as per POS standard */}
                   <div className="flex justify-between font-bold text-sm pt-1 border-b border-dashed border-gray-300 pb-2">
                     <span>ยอดรวมสุทธิ</span>
-                    <span>{(transaction.totalAmount || 0).toFixed(2)}</span>
+                    <span>{formatMoney(transaction.totalAmount)}</span>
                   </div>
                   <div className="flex justify-between pt-1 text-[11px]">
                     <span>ชำระโดย:</span>
@@ -219,11 +220,11 @@ const Receipt: React.FC<ReceiptProps> = ({ transaction, onClose }) => {
                     <>
                       <div className="flex justify-between text-[11px]">
                         <span>รับเงินสด:</span>
-                        <span>{(transaction.cashReceived || 0).toFixed(2)}</span>
+                        <span>{formatMoney(transaction.cashReceived)}</span>
                       </div>
                       <div className="flex justify-between text-[11px]">
                         <span>เงินทอน:</span>
-                        <span>{(transaction.changeAmount || 0).toFixed(2)}</span>
+                        <span>{formatMoney(transaction.changeAmount)}</span>
                       </div>
                     </>
                   )}

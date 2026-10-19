@@ -1,6 +1,7 @@
 import React from 'react';
 import { useProducts } from '../../context/ProductContext';
 import { Transaction } from '../../types';
+import { formatMoney } from '../../utils/formatMoney';
 
 interface TopProfitsProps {
   transactions: Transaction[];
@@ -68,10 +69,10 @@ const TopProfits: React.FC<TopProfitsProps> = ({ transactions, limit = 5 }) => {
             <div key={product.id} className="flex justify-between border-b pb-2">
               <div>
                 <div className="font-medium">{index + 1}. {product.name}</div>
-                <div className="text-sm text-gray-500">{product.quantity} ชิ้น / {product.revenue.toFixed(2)} บาท</div>
+                <div className="text-sm text-gray-500">{product.quantity} ชิ้น / {formatMoney(product.revenue)} บาท</div>
               </div>
               <div className="text-right font-semibold text-green-600">
-                +{product.profit.toFixed(2)} ฿
+                +{formatMoney(product.profit)} ฿
               </div>
             </div>
           ))}

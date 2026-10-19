@@ -1,7 +1,9 @@
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import type { TooltipItem } from 'chart.js';
 import { Transaction } from '../../types';
+import { formatMoney } from '../../utils/formatMoney';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -37,13 +39,18 @@ const SalesChart: React.FC<SalesChartProps> = ({ transactions }) => {
     plugins: {
       legend: { display: false },
       title: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (context: TooltipItem<'bar'>) => `${context.dataset.label}: ฿${formatMoney(context.parsed.y)}`,
+        },
+      },
     },
     scales: {
       y: {
         beginAtZero: true,
         ticks: {
           callback: function (value: number | string) {
-            return '฿' + Number(value).toLocaleString();
+            return '฿' + formatMoney(Number(value));
           }
         }
       },
