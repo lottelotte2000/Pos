@@ -256,10 +256,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   </div>
 
                   {calculatedChange !== null && (
-                    <div className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col items-center animate-slide-up">
-                      <span className="text-emerald-400 text-sm font-medium uppercase tracking-wide">เงินทอน</span>
-                      <div className="text-4xl font-bold text-emerald-400 tracking-tight mt-1">
-                        {formatMoney(calculatedChange)} <span className="text-lg">฿</span>
+                    <div className="mt-6 min-h-36 px-4 py-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col items-center justify-center animate-slide-up">
+                      <span className="text-emerald-400 text-lg font-semibold tracking-wide">เงินทอน</span>
+                      <div className="max-w-full break-all text-center text-5xl font-bold text-emerald-400 tracking-tight tabular-nums mt-2">
+                        {formatMoney(calculatedChange)} <span className="text-2xl">฿</span>
                       </div>
                     </div>
                   )}
