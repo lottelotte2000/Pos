@@ -62,7 +62,7 @@ const SettingsPage: React.FC = () => {
     }
   }, [editingReceiptSettings, receiptSettings, isDataLoaded]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
     setEditingReceiptSettings(prev => ({ ...prev, [id]: value }));
   };
@@ -485,6 +485,13 @@ const SettingsPage: React.FC = () => {
           <div>
             <label htmlFor="thankYouMessage" className="block text-sm font-medium text-slate-300 mb-1">ข้อความท้ายใบเสร็จ</label>
             <input id="thankYouMessage" type="text" value={editingReceiptSettings.thankYouMessage || ''} onChange={(e) => handleInputChange(e)} className="input-style w-full" disabled={isSaving} placeholder="ขอบคุณที่ใช้บริการ" />
+          </div>
+          <div>
+            <label htmlFor="paperWidth" className="block text-sm font-medium text-slate-300 mb-1">ขนาดกระดาษเครื่องพิมพ์ใบเสร็จ</label>
+            <select id="paperWidth" value={editingReceiptSettings.paperWidth || '58'} onChange={(e) => handleInputChange(e)} className="input-style w-full" disabled={isSaving}>
+              <option value="58">58 มม. (เครื่องพิมพ์สลิปเล็ก)</option>
+              <option value="80">80 มม. (เครื่องพิมพ์สลิปใหญ่)</option>
+            </select>
           </div>
         </div>
 

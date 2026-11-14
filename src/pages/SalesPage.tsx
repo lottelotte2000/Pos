@@ -12,6 +12,8 @@ import QuantityModal from '../components/sales/QuantityModal';
 import { Product, CartItem } from '../types';
 import { translateThaiBarcode } from '../utils/thaiBarcode';
 import { formatMoney } from '../utils/formatMoney';
+import { buildReceiptHtml, printHtml } from '../utils/receiptHtml';
+import { useAuth } from '../context/AuthContext';
 import { Search, ShoppingCart, PlusCircle, X, MonitorPlay, MonitorOff, CheckCircle, Clock, Printer, Package, Smartphone } from 'lucide-react';
 
 const SalesPage: React.FC = () => {
@@ -21,7 +23,8 @@ const SalesPage: React.FC = () => {
         setPaymentConfirmation, cancelPaymentConfirmation, completeActiveTabTransaction, resetCompletedTab
     } = useCart();
 
-    const { soundSettings, posSettings, updatePosSettings } = useSettings();
+    const { soundSettings, posSettings, updatePosSettings, receiptSettings } = useSettings();
+    const { currentUser } = useAuth();
 
     const { searchProducts, findProductByBarcode } = useProducts();
 
@@ -331,31 +334,16 @@ const SalesPage: React.FC = () => {
 
     const handlePrintReceipt = useCallback(() => {
         if (!activeTabData) return;
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) return;
-        const rows = activeTabData.items
-            .map(i => '<tr><td>' + i.name + '</td><td style="text-align:center">' + i.quantity + '</td><td style="text-align:right">' + formatMoney(i.price * i.quantity) + '</td></tr>')
-            .join('');
-        const cashSection = activeTabData.paymentMethod === 'cash'
-            ? '<div style="display:flex;justify-content:space-between"><span>รับมา</span><span>' + formatMoney(activeTabData.cashReceived) + '</span></div><div style="display:flex;justify-content:space-between"><b><span>เงินทอน</span><span>' + formatMoney(activeTabData.changeAmount) + '</span></b></div>'
-            : '';
-        const html = '<html><head><title>ใบเสร็จ</title>'
-            + '<style>body{font-family:sans-serif;font-size:10pt;width:72mm;margin:0 auto}'
-            + 'table{width:100%;border-collapse:collapse}td,th{padding:3px 4px}'
-            + 'hr{border:1px dashed #000}@media print{body{margin:0}}</style>'
-            + '</head><body>'
-            + '<div style="text-align:center"><p style="font-weight:bold;margin:4px 0">ใบเสร็จ</p>'
-            + '<p style="margin:2px 0">' + new Date().toLocaleString('th-TH') + '</p></div>'
-            + '<hr/><table><tr><th style="text-align:left">รายการ</th><th>จำนวน</th><th style="text-align:right">รวม</th></tr>'
-            + rows + '</table><hr/>'
-            + '<div style="display:flex;justify-content:space-between"><span>รวม</span><b><span>' + formatMoney(activeTabData.total) + ' บาท</span></b></div>'
-            + cashSection
-            + '</body></html>';
-        printWindow.document.write(html);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-    }, [activeTabData]);
+        printHtml(buildReceiptHtml({
+            date: new Date(),
+            items: activeTabData.items,
+            totalAmount: activeTabData.total,
+            paymentMethod: activeTabData.paymentMethod,
+            cashierName: currentUser?.username,
+            cashReceived: activeTabData.cashReceived,
+            changeAmount: activeTabData.changeAmount,
+        }, receiptSettings || {}));
+    }, [activeTabData, currentUser, receiptSettings]);
 
     const handleQuantityModalConfirm = (newQuantity: number) => {
         if (editingItemInfo && activeTabData) {

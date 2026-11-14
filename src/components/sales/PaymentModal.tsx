@@ -14,6 +14,12 @@ interface PaymentModalProps {
   initialPaymentMethod?: string;
 }
 
+// กันยอดรับเงินผิดปกติ (เช่น สแกนบาร์โค้ดสินค้าเข้าช่องรับเงินโดยไม่ตั้งใจ)
+// - เงินทอนเกิน MAX_CHANGE: ไม่ยอมให้บันทึก ล้างช่องให้พิมพ์ใหม่
+// - เงินทอนตั้งแต่ LARGE_CHANGE (แบงก์ใหญ่สุด): ต้องกดยืนยันซ้ำอีกครั้ง
+const MAX_CHANGE = 100_000;
+const LARGE_CHANGE = 1_000;
+
 const paymentOptions = [
   { id: 'cash', name: 'เงินสด', icon: <DollarSign size={20} /> },
   { id: 'credit_card', name: 'บัตรเครดิต', icon: <CreditCard size={20} /> },
@@ -32,6 +38,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<string>(initialPaymentMethod || 'cash');
   const [cashReceivedStr, setCashReceivedStr] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [largeChangeConfirmedFor, setLargeChangeConfirmedFor] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [activePromptPayAccount, setActivePromptPayAccount] = useState<PromptPayAccount | null>(null);
 
@@ -149,6 +156,20 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         playErrorSound();
         return;
       }
+      if (cash - total > MAX_CHANGE) {
+        setErrorMessage(`ยอดรับเงิน ${formatMoney(cash)} บาท ผิดปกติ (อาจสแกนบาร์โค้ดเข้าช่องรับเงิน) — ล้างช่องแล้ว กรุณาใส่ยอดใหม่`);
+        setCashReceivedStr('');
+        setLargeChangeConfirmedFor(null);
+        cashInputRef.current?.focus();
+        playErrorSound();
+        return;
+      }
+      if (cash - total >= LARGE_CHANGE && largeChangeConfirmedFor !== cashReceivedStr) {
+        setLargeChangeConfirmedFor(cashReceivedStr);
+        setErrorMessage(`เงินทอน ${formatMoney(cash - total)} บาท มากกว่าปกติ — ตรวจสอบยอดรับเงิน แล้วกดยืนยันอีกครั้ง`);
+        playErrorSound();
+        return;
+      }
       playSuccessSound();
       onSetConfirmation(cash, 'cash');
     } else {
@@ -255,12 +276,22 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl font-semibold">฿</span>
                   </div>
 
-                  {calculatedChange !== null && (
+                  {calculatedChange !== null && calculatedChange > MAX_CHANGE && (
+                    <div className="mt-6 p-4 rounded-xl bg-red-500/15 border border-red-500/30 text-red-200 text-sm flex items-start gap-2 animate-fade-in">
+                      <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
+                      <span>ยอดรับเงินมากผิดปกติ อาจสแกนบาร์โค้ดเข้าช่องนี้ — กรุณาลบแล้วพิมพ์ยอดใหม่</span>
+                    </div>
+                  )}
+
+                  {calculatedChange !== null && calculatedChange <= MAX_CHANGE && (
                     <div className="mt-6 min-h-36 px-4 py-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col items-center justify-center animate-slide-up">
                       <span className="text-emerald-400 text-lg font-semibold tracking-wide">เงินทอน</span>
                       <div className="max-w-full break-all text-center text-5xl font-bold text-emerald-400 tracking-tight tabular-nums mt-2">
                         {formatMoney(calculatedChange)} <span className="text-2xl">฿</span>
                       </div>
+                      {calculatedChange >= LARGE_CHANGE && (
+                        <span className="mt-2 text-amber-300 text-xs">เงินทอนเกิน {formatMoney(LARGE_CHANGE)} บาท — ตรวจสอบยอดก่อนยืนยัน</span>
+                      )}
                     </div>
                   )}
 

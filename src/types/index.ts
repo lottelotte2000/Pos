@@ -87,6 +87,7 @@ export interface ReceiptSettings {
   address?: string;
   phone?: string;
   thankYouMessage?: string;
+  paperWidth?: '58' | '80'; // ขนาดกระดาษเครื่องพิมพ์ใบเสร็จ (มม.) — ค่าเริ่มต้น 58
   promptPayId?: string; // Legacy: kept for migration
   promptPayName?: string; // Legacy: kept for migration
   promptPayAccounts?: PromptPayAccount[]; // ✅ New: Multiple accounts support
